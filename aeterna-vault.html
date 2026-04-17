@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AETERNA VAULT - Cognitive Insurance</title>
+    <title>Aeterna Vault - Cognitive Insurance Interface</title>
     
     <!-- React & Babel -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -17,9 +17,10 @@
             theme: {
                 extend: {
                     colors: {
-                        midnight: '#050A1F',
+                        midnight: '#010410',
                         gold: '#D4AF37',
-                        glass: 'rgba(5, 10, 31, 0.6)'
+                        glass: 'rgba(255, 255, 255, 0.03)',
+                        glassBorder: 'rgba(212, 175, 55, 0.2)'
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -30,77 +31,73 @@
         }
     </script>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-
-    <!-- Voiceflow Injection -->
-    <script type="text/javascript">
-      (function(d, t) {
-          var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
-          v.onload = function() {
-            window.voiceflow.chat.load({
-              verify: { projectID: '69e1b38618d5b8d8b666412e' },
-              url: 'https://general-runtime.voiceflow.com',
-              versionID: 'production',
-              voice: { url: "https://runtime-api.voiceflow.com" }
-            });
-          }
-          v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs"; v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
-      })(document, 'script');
-    </script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Mono&display=swap');
-        body { margin: 0; overflow: hidden; background: #02050f; color: white; -webkit-font-smoothing: antialiased;}
+        body { margin: 0; overflow: hidden; background: #010410; color: white; -webkit-font-smoothing: antialiased;}
         
         .ambient-glow {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 800px; height: 800px;
-            background: radial-gradient(circle, rgba(212,175,55,0.05) 0%, rgba(5,10,31,0) 70%);
+            width: 100vw; height: 100vh;
+            background: radial-gradient(circle at 50% 50%, rgba(212,175,55,0.06) 0%, rgba(1,4,16,1) 60%);
             z-index: 0; pointer-events: none;
         }
 
         .glass-panel {
-            background: rgba(10, 15, 40, 0.4);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.5), inset 0 0 20px rgba(212, 175, 55, 0.05);
+            background: var(--glass);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--glassBorder);
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6), inset 0 0 40px rgba(212, 175, 55, 0.03);
+            border-radius: 24px;
         }
 
         /* Center AI Orb */
         .ai-orb-container {
-            width: 180px; height: 180px; position: relative;
+            width: 200px; height: 200px; position: relative;
             display: flex; justify-content: center; align-items: center;
         }
         .ai-orb {
-            width: 100px; height: 100px; border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #D4AF37, #8a6c1c, #111);
-            box-shadow: 0 0 40px rgba(212, 175, 55, 0.4), inset -10px -10px 20px rgba(0,0,0,0.8);
+            width: 110px; height: 110px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #F5D76E, #8a6c1c, #111);
+            box-shadow: 0 0 50px rgba(212, 175, 55, 0.5), inset -15px -15px 30px rgba(0,0,0,0.8);
             animation: breathe 4s ease-in-out infinite alternate;
         }
         @keyframes breathe {
-            0% { transform: scale(0.95); box-shadow: 0 0 25px rgba(212,175,55,0.3); }
-            100% { transform: scale(1.05); box-shadow: 0 0 50px rgba(212,175,55,0.6); }
+            0% { transform: scale(0.95); box-shadow: 0 0 30px rgba(212,175,55,0.3); }
+            100% { transform: scale(1.05); box-shadow: 0 0 70px rgba(212,175,55,0.7); }
         }
         
-        .ai-orb.listening { animation: pulseRapid 0.6s infinite alternate; background: radial-gradient(circle at 30% 30%, #fff, #D4AF37, #111); }
+        .ai-orb.listening { 
+            animation: pulseRapid 0.8s infinite alternate; 
+            background: radial-gradient(circle at 30% 30%, #fff, #F5D76E, #111); 
+        }
         @keyframes pulseRapid {
-            0% { transform: scale(1); box-shadow: 0 0 40px rgba(212,175,55,0.6); }
-            100% { transform: scale(1.15); box-shadow: 0 0 80px rgba(255,255,255,0.6); border: 2px solid white; }
+            0% { transform: scale(1); box-shadow: 0 0 50px rgba(212,175,55,0.6); }
+            100% { transform: scale(1.15); box-shadow: 0 0 100px rgba(255,255,255,0.6); border: 2px solid white; }
         }
 
-        .orb-rings { position:absolute; width:100%; height:100%; border: 1px solid rgba(212,175,55,0.2); border-radius:50%; animation: spinNode 10s linear infinite; }
-        .orb-rings::before { content:''; position:absolute; width:8px; height:8px; background:var(--gold); border-radius:50%; top:-4px; left:50%; box-shadow: 0 0 10px var(--gold); }
+        .orb-rings { position:absolute; width:100%; height:100%; border: 1px solid rgba(212,175,55,0.3); border-radius:50%; animation: spinNode 12s linear infinite; }
+        .orb-rings::before { content:''; position:absolute; width:10px; height:10px; background:#D4AF37; border-radius:50%; top:-5px; left:50%; box-shadow: 0 0 15px #D4AF37; }
+        .orb-rings-reverse { position:absolute; width:120%; height:120%; border: 1px dashed rgba(212,175,55,0.15); border-radius:50%; animation: spinNodeRev 18s linear infinite; }
         @keyframes spinNode { 100% { transform: rotate(360deg); } }
+        @keyframes spinNodeRev { 100% { transform: rotate(-360deg); } }
 
         /* Voice Waveform */
-        .waveform { display: flex; gap: 4px; align-items: center; height: 40px; }
-        .wave-bar { width: 3px; background: var(--gold); border-radius: 4px; height: 4px; transition: height 0.1s ease; }
-        .wave-bar.active { animation: eq 0.6s ease-in-out infinite alternate; }
-        @keyframes eq { 0% { height: 4px; opacity:0.4; } 100% { height: 40px; opacity:1; box-shadow: 0 0 10px var(--gold); } }
+        .waveform { display: flex; gap: 5px; align-items: center; height: 50px; }
+        .wave-bar { width: 3px; background: rgba(212,175,55,0.3); border-radius: 4px; height: 6px; transition: height 0.15s ease, background 0.3s; }
+        .wave-bar.active { background: #D4AF37; box-shadow: 0 0 10px #D4AF37; animation: eq 0.5s ease-in-out infinite alternate; }
+        @keyframes eq { 0% { height: 6px; } 100% { height: 40px; } }
 
         /* Fade Utils */
-        .fade-in { animation: fadeIn 0.4s ease forwards; }
-        @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(15px); } to { opacity:1; transform: translateY(0); } }
+        
+        .fade-out { animation: fadeOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeOut { from { opacity:1; transform: scale(1); } to { opacity:0; transform: scale(0.95); } }
+
+        /* Soft 3D floating animation */
+        .float-subtle { animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -111,7 +108,6 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // TTS Audio Context for subtle sounds
         let audioCtx;
         function playBlip() {
             if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -120,7 +116,7 @@
             const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
             osc.start(); osc.stop(audioCtx.currentTime + 0.1);
         }
@@ -133,17 +129,18 @@
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(400, audioCtx.currentTime);
             osc.frequency.linearRampToValueAtTime(600, audioCtx.currentTime + 0.3);
-            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
             osc.start(); osc.stop(audioCtx.currentTime + 0.5);
         }
 
-
         function AeternaApp() {
-            // Flow States: 0: Init, 1: Understood, 2: Document, 3: Review, 4: Success
+            // Flow States: 
+            // 0: Init, 1: Extracted & Confirming, 2: Document Missing/Adaptive, 3: Document Verifying, 4: Review, 5: Submitted
             const [step, setStep] = useState(0); 
             const [isListening, setIsListening] = useState(false);
-            const [systemText, setSystemText] = useState("I'm here to help. Just tap the microphone and tell me what happened.");
+            const [systemText, setSystemText] = useState("I'm here to help. Just tell me what happened.");
+            const [systemSubtext, setSystemSubtext] = useState("Tap the center node to speak naturally.");
             
             // Extracted Data
             const [data, setData] = useState({
@@ -155,192 +152,273 @@
                 identity: 'pending', asset: 'pending', incident: 'pending', risk: 'Calculating...'
             });
 
-            // Waveform bars
-            const bars = Array.from({length: 20});
+            const bars = Array.from({length: 24});
+            const srRef = useRef(null);
 
-            // Executive Voice Agent
-            const speak = (txt, onEndCallback = null) => {
-                setSystemText(txt);
+            const speakText = (txt, onEndCallback = null) => {
+                setSystemText(`"${txt}"`);
+                window.speechSynthesis.cancel();
                 const utter = new SpeechSynthesisUtterance(txt);
-                utter.pitch = 0.9; utter.rate = 1.05;
+                utter.pitch = 0.95; utter.rate = 1.05;
                 if(onEndCallback) utter.onend = onEndCallback;
                 window.speechSynthesis.speak(utter);
             };
 
             const triggerListen = (expectedIntent) => {
-                // Audio init hack
                 if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 
                 const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if(!SpeechRec) return alert("Web Speech Not Supported.");
+                if(!SpeechRec) {
+                    setSystemSubtext("Speech Recognition not supported in this browser. Please use Chrome/Safari.");
+                    return;
+                }
                 
                 setIsListening(true);
-                const sr = new SpeechRec();
-                sr.start();
+                setSystemSubtext("Listening...");
+                srRef.current = new SpeechRec();
+                srRef.current.start();
                 
-                sr.onresult = (e) => {
+                srRef.current.onresult = (e) => {
                     setIsListening(false);
                     const res = e.results[0][0].transcript.toLowerCase();
-                    processVoice(res, expectedIntent);
+                    setSystemSubtext("Processing...");
+                    setTimeout(() => processVoice(res, expectedIntent), 500);
                 };
-                sr.onerror = () => setIsListening(false);
+                srRef.current.onerror = (e) => {
+                    setIsListening(false);
+                    setSystemSubtext("Audio connection lost. Tap to try again.");
+                };
             };
 
             const processVoice = (res, intent) => {
                 if(intent === 'initial') {
-                    if(res.includes('stolen') || res.includes('phone') || res.includes('chandigarh')) {
-                        // AI understands structured data
+                    // Extract semantics dynamically based on user speech
+                    if(res.includes('stolen') || res.includes('theft') || res.includes('robbed') || res.includes('phone') || res.includes('laptop')) {
                         playBlip();
-                        setData({ type: 'Theft', asset: 'Phone', location: 'Chandigarh', time: 'Yesterday' });
+                        const assetExtracted = res.includes('laptop') ? 'Laptop' : 'Phone';
+                        const loc = res.includes('chandigarh') ? 'Chandigarh' : 'Unknown';
+                        const timeStr = res.includes('yesterday') ? 'Yesterday' : 'Recent';
+                        setData({ type: 'Theft', asset: assetExtracted, location: loc, time: timeStr });
                         setStep(1);
-                        speak("I have understood your situation. Is this correct?", () => triggerListen('confirm_1'));
-                    } else {
-                        speak("I didn't quite catch that. Could you repeat?", () => triggerListen('initial'));
-                    }
-                }
-                else if(intent === 'confirm_1') {
-                    if(res.includes('yes') || res.includes('confirm') || res.includes('correct')) {
+                        speakText("Is this correct?", () => triggerListen('confirm_theft'));
+                    } 
+                    else if (res.includes('health') || res.includes('sick') || res.includes('hospital') || res.includes('accident') || res.includes('fever')) {
                         playBlip();
-                        setTrust(p => ({...p, identity: 'verified'}));
-                        speak("Do you have the IMEI or should I securely fetch it directly from your device?", () => triggerListen('fetch'));
-                    } else {
-                       speak("Let's restart. What happened?", () => triggerListen('initial'));
+                        const isAcc = res.includes('accident');
+                        setData({ type: isAcc ? 'Accident' : 'Health', asset: 'Personal', location: 'Hospital', time: 'Today' });
+                        setStep(1);
+                        speakText("Is this correct?", () => triggerListen(isAcc ? 'confirm_accident' : 'confirm_health'));
+                    }
+                    else if (res.includes('travel') || res.includes('flight') || res.includes('train') || res.includes('delayed') || res.includes('cancelled')) {
+                        playBlip();
+                        setData({ type: 'Travel', asset: 'Trip', location: 'Airport/Station', time: 'Today' });
+                        setStep(1);
+                        speakText("Is this correct?", () => triggerListen('confirm_travel'));
+                    }
+                    else {
+                        speakText("I didn't catch the core event. Was it theft, health, or travel?", () => triggerListen('initial'));
                     }
                 }
-                else if(intent === 'fetch') {
-                    playSuccess();
-                    setTrust(p => ({...p, asset: 'verified'}));
-                    setStep(2);
-                    speak("Asset verified cryptographically. Now, you can just show me any relevant document, like an F I R, by dragging it here.");
+                else if(intent.startsWith('confirm_')) {
+                    if(res.includes('yes') || res.includes('confirm') || res.includes('correct') || res.includes('yeah') || res.includes('yep')) {
+                        playSuccess();
+                        setTrust(p => ({...p, identity: 'Verified ✅'}));
+                        const kind = intent.split('_')[1];
+                        setStep(2);
+                        if (kind === 'theft') {
+                            speakText("Do you have the IMEI or should I fetch it?", () => triggerListen('adaptive_answer'));
+                        } else if (kind === 'health') {
+                            speakText("May I access your health records via ABHA?", () => triggerListen('adaptive_answer'));
+                        } else if (kind === 'travel') {
+                            speakText("Share your PNR or should I fetch your trips?", () => triggerListen('adaptive_answer'));
+                        } else if (kind === 'accident') {
+                            speakText("Was this a road accident or personal injury?", () => triggerListen('adaptive_answer'));
+                        }
+                    } else if (res.includes('no') || res.includes('adjust') || res.includes('wrong')) {
+                        setStep(0);
+                        setData({ type: '-', asset: '-', location: '-', time: '-' });
+                        speakText("Let's restart. Just tell me what happened in your own words.", () => triggerListen('initial'));
+                    } else {
+                        speakText("Please say yes to confirm or no to restart.", () => triggerListen(intent));
+                    }
+                }
+                else if(intent === 'adaptive_answer') {
+                    playBlip();
+                    setTrust(p => ({...p, asset: 'Verified ✅'}));
+                    
+                    if (res.includes("don't have") || res.includes("no") || res.includes("cannot")) {
+                        // User confusion handling
+                        speakText("No problem. You can continue, but this may delay approval. I can help request it digitally. Should we proceed?", () => triggerListen('proceed'));
+                    } else {
+                        setStep(3);
+                        // Document request
+                        speakText("I have fetched the KYC automatically. I still need the official report to proceed. You can just show me the document.", () => setSystemSubtext("Awaiting Document Upload"));
+                    }
+                }
+                else if(intent === 'proceed') {
+                     if(res.includes('yes') || res.includes('proceed') || res.includes('continue')) {
+                        setStep(3);
+                        speakText("Understood. For the missing proof, you can just show me any relevant document now.", () => setSystemSubtext("Awaiting Document Upload"));
+                     } else {
+                        speakText("We can pause here. Say resume when ready.", () => setSystemSubtext("Paused. Say Resume."));
+                     }
                 }
                 else if(intent === 'final_review') {
-                    if(res.includes('yes') || res.includes('submit')) {
+                    if(res.includes('yes') || res.includes('submit') || res.includes('confirm')) {
                         playSuccess();
-                        setStep(4);
-                        speak("Your claim is submitted. The blockchain ledger is now tracking your resolution. I will monitor it for you.");
+                        setStep(5);
+                        speakText("Your claim is submitted. I'll keep tracking it for you.");
+                        setSystemSubtext("Session finalized.");
+                    } else if (res.includes('edit') || res.includes('change')) {
+                        speakText("What would you like to edit? The asset, location, or time?", () => triggerListen('edit_field'));
                     }
                 }
             };
 
-            const handleDocumentDrop = () => {
+            const handleDocumentUpload = () => {
+                if (step !== 3) return;
                 playBlip();
-                setTrust(p => ({...p, incident: 'verified', risk: 'Low'}));
-                setStep(3);
-                speak("Document ingested and verified. Please review the final claim before I submit to the ledger.", () => triggerListen('final_review'));
+                setTrust(p => ({...p, incident: 'Verifying ⏳'}));
+                speakText("I'm verifying this with official sources.");
+                setSystemSubtext("Running OCR and Authenticity checks...");
+                
+                setTimeout(() => {
+                    playSuccess();
+                    setTrust(p => ({...p, incident: 'Verified ✅', risk: 'Low'}));
+                    setStep(4);
+                    speakText("Please review once before I submit.", () => triggerListen('final_review'));
+                }, 3000);
             };
 
             return (
-                <div className="w-full h-screen p-8 flex flex-col z-10 relative">
+                <div className="w-full h-screen p-10 flex flex-col z-10 relative">
                     
                     {/* Header */}
-                    <header className="flex justify-between items-center mb-10">
-                        <div className="font-mono text-gold text-2xl tracking-widest font-bold drop-shadow-[0_0_10px_rgba(212,175,55,0.6)]">
+                    <header className="flex justify-between items-center mb-12">
+                        <div className="font-mono text-gold text-3xl tracking-widest font-light drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]">
                             AETERNA VAULT
                         </div>
-                        <div className="text-gray-400 font-mono text-[10px] tracking-widest uppercase border border-gray-600/30 px-4 py-2 rounded-full backdrop-blur-md">
-                            Live Cognitive Session
+                        <div className="flex gap-4">
+                            <div className="text-gray-400 font-mono text-xs tracking-widest uppercase border border-white/10 px-6 py-2 rounded-full glass-panel">
+                                Cognitive Session Active
+                            </div>
                         </div>
                     </header>
 
                     {/* MAIN LAYOUT */}
-                    <div className="flex-1 flex justify-between items-stretch">
+                    <div className="flex-1 flex justify-between items-stretch max-w-[1600px] mx-auto w-full">
                         
                         {/* LEFT PANEL: Understanding */}
-                        <div className="w-80 flex flex-col gap-4">
-                            <h2 className="font-sans text-sm font-semibold text-gray-300 uppercase tracking-wider mb-2">Understanding Your Situation</h2>
+                        <div className="w-80 flex flex-col gap-6">
+                            <h2 className="font-mono text-xs font-semibold text-gray-500 uppercase tracking-[0.2em] mb-2 -ml-2">Understanding Your Situation</h2>
                             
-                            <div className="glass-panel rounded-2xl p-6 flex flex-col gap-4">
-                                <DataField label="Event Type" value={data.type} icon="⚠" />
-                                <DataField label="Asset" value={data.asset} icon="📱" />
-                                <DataField label="Location" value={data.location} icon="📍" />
-                                <DataField label="Time Frame" value={data.time} icon="⏳" />
+                            <div className="glass-panel p-8 flex flex-col gap-6 w-full float-subtle">
+                                <DataField label="Event Type" value={data.type === '-' ? 'Listening...' : data.type} />
+                                <DataField label="Asset / Subject" value={data.asset} />
+                                <DataField label="Time" value={data.time} />
+                                <DataField label="Location" value={data.location} />
                             </div>
 
-                            {/* Dynamic Action Block */}
-                            {step === 2 && (
-                                <div className="glass-panel border-dashed border-2 p-8 text-center rounded-2xl mt-4 cursor-pointer hover:bg-white/5 transition fade-in" onClick={handleDocumentDrop}>
-                                    <div className="text-3xl mb-3">📄</div>
-                                    <h3 className="font-sans text-[13px] font-semibold text-gold mb-1">Visual Ingestion</h3>
-                                    <p className="text-gray-400 text-[11px] font-mono">Click or Drag Document (FIR)</p>
+                            {/* Document Upload Zone - Dynamic */}
+                            {step === 3 && (
+                                <div className="glass-panel border-dashed border-gold/40 border p-8 text-center mt-4 cursor-pointer hover:bg-gold/5 transition fade-in" onClick={handleDocumentUpload}>
+                                    <div className="w-16 h-16 mx-auto bg-gold/10 rounded-full flex items-center justify-center mb-4 border border-gold/20 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    </div>
+                                    <h3 className="font-sans text-sm font-medium text-gold mb-2">Show Document</h3>
+                                    <p className="text-gray-400 text-xs font-mono">Upload, scan, or take a photo</p>
                                 </div>
                             )}
                         </div>
 
                         {/* CENTER PANEL: Conversational Core */}
-                        <div className="flex-1 flex flex-col items-center justify-center -mt-20">
+                        <div className="flex-1 flex flex-col items-center justify-center -mt-16">
                             
                             {/* The Orb */}
-                            <div className="ai-orb-container mb-12 cursor-pointer" onClick={() => step===0 ? triggerListen('initial') : null}>
-                                <div className={`orb-rings ${isListening ? 'animate-pulse' : ''}`}></div>
-                                <div className={`ai-orb ${isListening ? 'listening' : ''}`}></div>
-                            </div>
+                            {step < 5 && (
+                                <div className="ai-orb-container mb-12 cursor-pointer fade-in" onClick={() => step===0 ? triggerListen('initial') : triggerListen('intent')}>
+                                    <div className="orb-rings-reverse"></div>
+                                    <div className={`orb-rings ${isListening ? 'animate-pulse' : ''}`}></div>
+                                    <div className={`ai-orb ${isListening ? 'listening' : ''}`}></div>
+                                </div>
+                            )}
 
                             {/* System Text Overlay */}
-                            <div className="max-w-md text-center h-24 flex items-center justify-center">
-                                <h1 className="font-sans text-2xl font-light text-white leading-relaxed drop-shadow-md">
-                                    "{systemText}"
+                            <div className="max-w-2xl text-center flex flex-col items-center">
+                                <h1 className="font-sans text-3xl md:text-4xl font-light text-white leading-tight drop-shadow-lg mb-4 text-center">
+                                    {systemText}
                                 </h1>
+                                {step < 4 && (
+                                     <p className="font-mono text-xs text-gold/70 tracking-widest uppercase">
+                                        {systemSubtext}
+                                     </p>
+                                )}
                             </div>
 
                             {/* Floating Context Cards */}
                             {step === 1 && (
-                                <div className="glass-panel p-6 rounded-2xl w-80 mt-8 text-center fade-in border-gold/50">
-                                    <p className="font-mono text-xs text-gray-400 uppercase mb-4">I understood this:</p>
-                                    <div className="font-sans text-sm font-medium mb-6 space-y-2 text-left bg-black/20 p-4 rounded-xl">
-                                        <div><span className="text-gray-500 mr-2">Loss:</span> {data.asset}</div>
-                                        <div><span className="text-gray-500 mr-2">Where:</span> {data.location}</div>
-                                        <div><span className="text-gray-500 mr-2">When:</span> {data.time}</div>
+                                <div className="glass-panel p-8 w-[400px] mt-12 text-center fade-in float-subtle border-gold/30">
+                                    <p className="font-mono text-xs text-gold/80 uppercase tracking-widest mb-6">I understood this:</p>
+                                    <div className="space-y-4 mb-8 text-left bg-black/40 p-6 rounded-2xl border border-white/5">
+                                        <div className="flex justify-between items-center"><span className="text-gray-500 font-mono text-xs uppercase">Type</span> <span className="font-medium text-lg">{data.type}</span></div>
+                                        <div className="flex justify-between items-center"><span className="text-gray-500 font-mono text-xs uppercase">Subject</span> <span className="font-medium text-lg">{data.asset}</span></div>
+                                        <div className="flex justify-between items-center"><span className="text-gray-500 font-mono text-xs uppercase">Location</span> <span className="font-medium text-lg">{data.location}</span></div>
+                                        <div className="flex justify-between items-center"><span className="text-gray-500 font-mono text-xs uppercase">Time</span> <span className="font-medium text-lg">{data.time}</span></div>
                                     </div>
-                                    <div className="flex justify-center gap-4 text-xs font-mono">
-                                        <div className="px-4 py-2 bg-gold/20 text-gold rounded-full border border-gold/30">✔ Confirm</div>
-                                        <div className="px-4 py-2 border border-white/10 text-gray-300 rounded-full">✏ Adjust</div>
+                                    <div className="flex justify-center gap-4 text-sm font-sans font-medium">
+                                        <button onClick={() => processVoice('yes', 'confirm_theft')} className="px-6 py-3 bg-gold text-black rounded-full hover:bg-yellow-400 transition shadow-[0_0_20px_rgba(212,175,55,0.3)]">✔ Confirm</button>
+                                        <button onClick={() => processVoice('no', 'confirm_theft')} className="px-6 py-3 border border-white/20 text-white rounded-full hover:bg-white/10 transition">✏ Adjust (Speak)</button>
                                     </div>
                                 </div>
                             )}
 
                             {/* Review Screen */}
-                            {step === 3 && (
-                                <div className="glass-panel p-8 rounded-2xl w-96 mt-8 fade-in border-gold/50 shadow-[0_0_50px_rgba(212,175,55,0.15)]">
-                                    <p className="font-sans text-lg text-gold font-medium mb-6 text-center">Here is your claim summary:</p>
-                                    <div className="space-y-4 font-mono text-xs mb-8">
-                                        <div className="flex justify-between border-b border-white/10 pb-2"><span className="text-gray-500">Asset</span><span>{data.asset}</span></div>
-                                        <div className="flex justify-between border-b border-white/10 pb-2"><span className="text-gray-500">Event</span><span>{data.type}</span></div>
-                                        <div className="flex justify-between border-b border-white/10 pb-2"><span className="text-gray-500">Location</span><span>{data.location}</span></div>
-                                        <div className="flex justify-between"><span className="text-gray-500">Proofs</span><span className="text-green-400">FIR.pdf, Telemetry</span></div>
+                            {step === 4 && (
+                                <div className="glass-panel p-10 w-[500px] mt-8 fade-in border-gold/40 shadow-[0_0_80px_rgba(212,175,55,0.15)] float-subtle">
+                                    <p className="font-sans text-xl text-gold font-light mb-8 text-center letter-spacing-tight">Here's your claim:</p>
+                                    <div className="space-y-5 font-mono text-sm mb-10 bg-black/30 p-6 rounded-xl border border-white/5">
+                                        <div className="flex justify-between border-b border-white/10 pb-3"><span className="text-gray-500 uppercase text-xs">Event</span><span className="text-white">{data.type}</span></div>
+                                        <div className="flex justify-between border-b border-white/10 pb-3"><span className="text-gray-500 uppercase text-xs">Asset</span><span className="text-white">{data.asset}</span></div>
+                                        <div className="flex justify-between border-b border-white/10 pb-3"><span className="text-gray-500 uppercase text-xs">When & Where</span><span className="text-white">{data.time}, {data.location}</span></div>
+                                        <div className="flex justify-between"><span className="text-gray-500 uppercase text-xs">Attached Proofs</span><span className="text-green-400">Validated Doc + API Sync</span></div>
                                     </div>
-                                    <button onClick={() => processVoice('submit', 'final_review')} className="w-full py-4 bg-gold text-black font-semibold tracking-wider font-sans rounded-xl hover:bg-yellow-400 transition-colors shadow-[0_0_20px_rgba(212,175,55,0.4)]">
-                                        SUBMIT CLAIM
-                                    </button>
+                                    <div className="flex gap-4">
+                                        <button onClick={() => processVoice('edit', 'final_review')} className="flex-1 py-4 border border-white/20 text-white font-medium rounded-xl hover:bg-white/5 transition">Edit</button>
+                                        <button onClick={() => processVoice('submit', 'final_review')} className="flex-[2] py-4 bg-gold text-black font-semibold rounded-xl hover:bg-yellow-400 transition shadow-[0_0_30px_rgba(212,175,55,0.4)]">
+                                            Confirm & Submit
+                                        </button>
+                                    </div>
                                 </div>
                             )}
 
                             {/* Success Screen */}
-                            {step === 4 && (
+                            {step === 5 && (
                                 <div className="text-center mt-12 fade-in">
-                                    <div className="w-20 h-20 bg-green-500/20 border-2 border-green-400 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-[0_0_40px_rgba(34,197,94,0.4)] text-green-400">✓</div>
-                                    <h2 className="text-xl font-mono text-green-400 tracking-widest uppercase">Resolution Active</h2>
+                                    <div className="w-24 h-24 bg-green-500/10 border-2 border-green-400 rounded-full flex items-center justify-center text-4xl mx-auto mb-8 shadow-[0_0_50px_rgba(34,197,94,0.3)] text-green-400">✓</div>
+                                    <h2 className="text-2xl font-sans font-light text-white mb-2">Claim Synchronized</h2>
+                                    <p className="text-gray-400 font-mono text-sm">Blockchain ledger updated. Claim ID: AE-9942</p>
                                 </div>
                             )}
 
                         </div>
 
                         {/* RIGHT PANEL: Live Trust Engine */}
-                        <div className="w-80 flex flex-col gap-4">
-                            <h2 className="font-sans text-sm font-semibold text-gray-300 uppercase tracking-wider mb-2 text-right">Live Trust Engine</h2>
+                        <div className="w-80 flex flex-col gap-6">
+                            <h2 className="font-mono text-xs font-semibold text-gray-500 uppercase tracking-[0.2em] mb-2 text-right -mr-2">Verification Progress</h2>
                             
-                            <div className="glass-panel rounded-2xl p-6">
-                                <div className="space-y-6">
-                                    <VerificationRow label="Identity Verified" status={trust.identity} />
-                                    <VerificationRow label="Asset Authenticated" status={trust.asset} />
-                                    <VerificationRow label="Incident Validated" status={trust.incident} />
+                            <div className="glass-panel p-8 float-subtle">
+                                <div className="space-y-8">
+                                    <VerificationRow label="Identity Check" status={trust.identity} />
+                                    <VerificationRow label="Asset Authenticity" status={trust.asset} />
+                                    <VerificationRow label="Event Verification" status={trust.incident} />
                                     
-                                    <div className="pt-6 border-t border-white/10 mt-6">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="font-sans text-xs text-gray-400">Dynamic Fraud Risk</span>
-                                            <span className={`font-mono text-xs font-bold ${trust.risk === 'Low' ? 'text-green-400' : 'text-gold'}`}>{trust.risk}</span>
+                                    <div className="pt-8 border-t border-white/10 mt-2">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <span className="font-mono text-[10px] text-gray-500 uppercase tracking-widest">Fraud Risk Signal</span>
+                                            <span className={`font-mono text-xs font-bold ${trust.risk === 'Low' ? 'text-green-400' : 'text-gold animate-pulse'}`}>{trust.risk}</span>
                                         </div>
-                                        <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                                            <div className={`h-full ${trust.risk==='Low'?'w-12 bg-green-400':'w-full bg-gold/50 animate-pulse'}`}></div>
+                                        <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                                            <div className={`h-full transition-all duration-1000 ${trust.risk==='Low'?'w-12 bg-green-400 shadow-[0_0_10px_#4ade80]':'w-full bg-gold/50 animate-pulse'}`}></div>
                                         </div>
                                     </div>
                                 </div>
@@ -350,14 +428,14 @@
                     </div>
 
                     {/* Footer Waveform */}
-                    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3">
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4">
                         <div className="waveform">
                             {bars.map((_, i) => (
                                 <div key={i} className={`wave-bar ${isListening ? 'active' : ''}`} style={{animationDelay: `${Math.random()}s`}}></div>
                             ))}
                         </div>
-                        <span className="font-mono text-[9px] tracking-widest text-gray-500 uppercase">
-                            {isListening ? 'SECURE ACOUSTIC CHANNEL OPEN' : 'SYSTEM AWAITING INPUT'}
+                        <span className="font-mono text-[10px] tracking-[0.3em] text-gray-600 uppercase">
+                            {isListening ? 'ACOUSTIC SENSOR ACTIVE' : 'AWAITING VOCAL INPUT'}
                         </span>
                     </div>
 
@@ -365,26 +443,26 @@
             );
         }
 
-        // Mini Components
-        function DataField({label, value, icon}) {
+        function DataField({label, value}) {
+            const isEmpty = value === '-' || value === 'Listening...';
             return (
-                <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex justify-center items-center text-lg">{icon}</div>
-                    <div>
-                        <div className="font-mono text-[9px] uppercase tracking-widest text-gray-500 mb-1">{label}</div>
-                        <div className={`font-sans text-sm font-medium ${value === '-' ? 'text-gray-700' : 'text-white'}`}>{value}</div>
-                    </div>
+                <div className="flex flex-col gap-1 border-b border-white/5 pb-4 last:border-0 last:pb-0">
+                    <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">{label}</div>
+                    <div className={`font-sans text-base transition-colors ${isEmpty ? 'text-gray-600 italic' : 'text-white font-medium'}`}>{value}</div>
                 </div>
             );
         }
 
         function VerificationRow({label, status}) {
+            const isPending = status === 'pending';
+            const isVerifying = status === 'Verifying ⏳';
             return (
-                <div className="flex justify-between items-center">
-                    <span className="font-sans text-[13px] text-gray-300">{label}</span>
-                    <span className="text-lg">
-                        {status === 'pending' ? <span className="text-gray-600 opacity-50 block animate-spin">◒</span> : 
-                         status === 'verified' ? <span className="text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]">✅</span> : ''}
+                <div className="flex justify-between items-center group">
+                    <span className="font-sans text-sm text-gray-400 group-hover:text-white transition-colors">{label}</span>
+                    <span className="text-sm font-mono flex items-center">
+                        {isPending ? <span className="text-gray-600 opacity-50 block animate-spin">◒</span> : 
+                         isVerifying ? <span className="text-gold animate-pulse">⏳</span> : 
+                         <span className="text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.4)]">{status}</span>}
                     </span>
                 </div>
             )
