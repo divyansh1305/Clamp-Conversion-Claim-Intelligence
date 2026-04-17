@@ -1,550 +1,572 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aeterna Vault - Global AI Insurance Protocol</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aeterna Vault - 3D Interactive Claim Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    :root {
+      --bg: #030712;
+      --bg-gradient: radial-gradient(circle at top center, #1e1b4b, #030712 70%);
+      --surface: rgba(17, 24, 39, 0.4);
+      --surface-hover: rgba(31, 41, 55, 0.6);
+      --border: rgba(255, 255, 255, 0.1);
+      --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.6);
+      --accent: #10b981;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --error: #ef4444;
+      --font: 'Outfit', sans-serif;
+    }
 
-    <!-- React & Babel -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); background-image: var(--bg-gradient); color: var(--text); font-family: var(--font); min-height: 100vh; overflow-x: hidden; }
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    /* GLASSMORPHISM */
+    .glass { background: var(--surface); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 20px; }
 
-    <!-- GSAP for Animations -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    /* 3D DASHBOARD ENTRY */
+    #dashboardEntry { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; perspective: 1000px; }
+    .cards-container { display: flex; gap: 40px; transform-style: preserve-3d; margin-top: 40px; }
+    .card-3d { width: 300px; height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease; position: relative; overflow: hidden; }
+    .card-3d::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent); opacity: 0.5; }
+    .card-3d:hover { transform: translateY(-15px) rotateX(10deg) rotateY(10deg); box-shadow: 0 25px 50px rgba(0,0,0,0.5), 0 0 30px var(--primary-glow); border-color: var(--primary); }
+    .card-icon { font-size: 5rem; margin-bottom: 24px; pointer-events: none;}
+    .card-title { font-size: 1.5rem; font-weight: 500; pointer-events: none;}
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        midnight: '#030712',
-                        gold: '#D4AF37',
-                        crimson: '#e11d48',
-                        neonblue: '#3b82f6',
-                        glass: 'rgba(15, 23, 42, 0.4)'
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['Space Mono', 'monospace']
-                    }
-                }
-            }
-        }
-    </script>
+    /* MAIN CLAIM SYSTEM */
+    #claimSystem { display: none; padding: 40px; max-width: 1400px; margin: 0 auto; }
     
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Mono&display=swap');
-        body { margin: 0; overflow: hidden; background: #030712; color: white; -webkit-font-smoothing: antialiased;}
-        
-        #three-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
-        
-        /* Glassmorphism Classes */
-        .glass-panel {
-            background: var(--glass);
-            backdrop-filter: blur(28px);
-            -webkit-backdrop-filter: blur(28px);
-            border: 1px solid rgba(212, 175, 55, 0.15);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
-        }
-        
-        .gold-border { border-color: rgba(212, 175, 55, 0.4); }
+    /* PROGRESS BAR */
+    .progress-container { width: 100%; border-radius: 12px; padding: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;}
+    .progress-track { flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin: 0 30px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.4s ease; box-shadow: 0 0 10px var(--primary-glow); }
+    .progress-stats { font-size: 1.1rem; font-weight: 600; color: var(--accent); }
+    .progress-q { font-size: 0.9rem; color: var(--text-muted); }
 
-        /* Custom Tilt effect for Selection Cards */
-        .tilt-card {
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            transform-style: preserve-3d;
-        }
-        .tilt-card-inner { transform: translateZ(40px); }
-        .tilt-card:hover {
-            border-color: rgba(212, 175, 55, 0.8);
-            box-shadow: 0 0 40px rgba(212, 175, 55, 0.2);
-            transform: translateY(-10px) scale(1.02);
-            z-index: 20;
-        }
+    /* LAYOUT Grid */
+    .layout-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 40px; }
+    
+    /* FORM STEPS */
+    .step-section { display: none; opacity: 0; animation: fadeUp 0.5s ease forwards; padding: 40px; }
+    .step-section.active { display: block; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* The AI Orb Phase 2 */
-        .ai-orb-container { width: 140px; height: 140px; position: relative; display: flex; justify-content: center; align-items: center; margin: 0 auto;}
-        .ai-orb {
-            width: 80px; height: 80px; border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #F5D76E, #9c7c25, #0a0a0a);
-            box-shadow: 0 0 40px rgba(212, 175, 55, 0.4), inset -10px -10px 20px rgba(0,0,0,0.8);
-            animation: breathe 4s ease-in-out infinite alternate;
-        }
-        @keyframes breathe {
-            0% { transform: scale(0.95); box-shadow: 0 0 20px rgba(212,175,55,0.2); }
-            100% { transform: scale(1.05); box-shadow: 0 0 50px rgba(212,175,55,0.6); }
-        }
-        .ai-orb.listening { 
-            animation: pulseRapid 0.6s infinite alternate; 
-            background: radial-gradient(circle at 30% 30%, #fff, #F5D76E, #111); 
-        }
-        @keyframes pulseRapid {
-            0% { transform: scale(1); box-shadow: 0 0 40px rgba(212,175,55,0.5); }
-            100% { transform: scale(1.2); box-shadow: 0 0 80px rgba(255,255,255,0.7); border: 2px solid white; }
-        }
-        .orb-rings { position:absolute; width:100%; height:100%; border: 1px dashed rgba(212,175,55,0.3); border-radius:50%; animation: spinNode 10s linear infinite; }
-        .orb-rings::before { content:''; position:absolute; width:6px; height:6px; background:#D4AF37; border-radius:50%; top:-3px; left:50%; box-shadow: 0 0 10px #D4AF37; }
-        @keyframes spinNode { 100% { transform: rotate(360deg); } }
+    /* FORM ELEMENTS */
+    .form-group { margin-bottom: 24px; position: relative; }
+    .form-label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-muted); }
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+    .form-control { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text); padding: 18px 50px 18px 16px; border-radius: 12px; font-family: var(--font); font-size: 1.05rem; transition: all 0.3s ease; }
+    .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 15px rgba(99,102,241,0.3); }
+    .form-control.error { border-color: var(--error); background: rgba(239, 68, 68, 0.05); }
+    
+    /* THE MIC ICON */
+    .mic-btn { position: absolute; right: 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; z-index: 10; font-size: 1rem;}
+    .mic-btn:hover { background: var(--primary); color: white; transform: scale(1.1); }
+    .mic-btn.recording { background: var(--error); color: white; animation: pulse 1s infinite alternate; }
 
-        /* Animation Fades */
-        .fade-in { animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes fadeIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+    @keyframes pulse { from { transform: scale(1); box-shadow: 0 0 10px rgba(239,68,68,0.5); } to { transform: scale(1.1); box-shadow: 0 0 20px rgba(239,68,68,0.8); } }
 
-        .scan-line {
-            position: absolute; top: 0; left: 0; width: 100%; height: 2px;
-            background: #D4AF37; box-shadow: 0 0 20px #D4AF37;
-            animation: scan 2s linear infinite; opacity: 0; pointer-events: none;
-        }
-        @keyframes scan { 0% { top: 0; opacity: 1; } 90% { top: 100%; opacity: 1; } 100% { top: 100%; opacity: 0; } }
+    /* BUTTONS */
+    .btn-group { display: flex; gap: 16px; margin-top: 30px; }
+    .btn { padding: 16px 32px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border); border-radius: 12px; font-family: var(--font); font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease; }
+    .btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+    .btn-primary { background: var(--primary); border: none; box-shadow: 0 10px 20px rgba(99,102,241,0.3); }
+    .btn-primary:hover { background: #4f46e5; box-shadow: 0 10px 25px rgba(99,102,241,0.5); }
+    .btn-primary:disabled { background: #374151; color: #9ca3af; cursor: not-allowed; box-shadow: none; transform: none; }
 
-        /* AI Text typed effect */
-        .typing-cursor::after { content: '|'; animation: blink 1s step-end infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
+    .radio-group { display: flex; gap: 20px; }
+    .radio-label { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .radio-label input { width: 18px; height: 18px; accent-color: var(--primary); }
 
-        .waveform { display: flex; gap: 3px; align-items: center; height: 30px; justify-content: center;}
-        .wave-bar { width: 3px; background: rgba(212,175,55,0.4); border-radius: 2px; height: 4px; transition: 0.1s ease; }
-        .wave-bar.active { background: #D4AF37; box-shadow: 0 0 8px #D4AF37; animation: eq 0.4s ease-in-out infinite alternate; }
-        @keyframes eq { 0% { height: 4px; } 100% { height: 30px; } }
-    </style>
+    /* CONDITIONAL BLOCK */
+    .cond-block { display: none; margin-top: 20px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 12px; border-left: 4px solid var(--primary); animation: fadeUp 0.3s ease; }
+    .cond-block.visible { display: block; }
+
+    /* UPLOAD TILE */
+    .upload-tile { border: 2px dashed var(--border); padding: 30px; text-align: center; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; margin-bottom: 16px; background: rgba(0,0,0,0.2); }
+    .upload-tile:hover { border-color: var(--primary); background: rgba(99,102,241,0.1); }
+    
+    /* TOAST */
+    .toast { position: fixed; top: 20px; right: 20px; background: var(--surface-hover); border-left: 4px solid var(--primary); padding: 16px 24px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); opacity: 0; transform: translateX(50px); transition: all 0.4s ease; z-index: 1000; display:flex; align-items:center; gap:12px; }
+    .toast.show { opacity: 1; transform: translateX(0); }
+
+    .review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .review-item { background: rgba(0,0,0,0.3); padding: 16px; border-radius: 8px; }
+
+    /* VOICE PROCESSING ORB (SIDE) */
+    .side-orb { width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, #fff, var(--primary), #000); box-shadow: 0 0 20px var(--primary-glow); margin: 0 auto 20px; animation: breathe 3s infinite ease; display: none; }
+    .side-orb.active { display: block; animation: pulse 0.5s infinite alternate; }
+  </style>
 </head>
 <body>
 
-    <div id="three-container"></div>
-    <div id="react-root" class="relative z-10 w-full h-screen overflow-hidden"></div>
+  <!-- ================= 3D ENTRY DASHBOARD ================= -->
+  <div id="dashboardEntry">
+    <h1 style="font-size: 3rem; margin-bottom: 10px;">Select Claim Protocol</h1>
+    <p style="color:var(--text-muted); font-size:1.2rem; margin-bottom: 30px;">Click a card or dictate to the open microphone.</p>
+    
+    <!-- Global Mic listening status simulated for aesthetic -->
+    <div style="display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.5); padding:10px 20px; border-radius:50px; border:1px solid var(--primary);">
+       <span style="display:block; width:10px; height:10px; background:var(--error); border-radius:50%; animation:pulse 1s infinite alternate;"></span>
+       <span>Listening for "Vehicle Insurance"...</span>
+    </div>
 
-    <!-- Main Logic -->
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+    <div class="cards-container">
+      <div class="card-3d glass" onclick="startFlow('Health')">
+        <div class="card-icon">🏥</div><div class="card-title">Health Insurance</div>
+      </div>
+      <div class="card-3d glass" onclick="startFlow('Travel')">
+        <div class="card-icon">✈️</div><div class="card-title">Travel Insurance</div>
+      </div>
+      <div class="card-3d glass" onclick="startFlow('Vehicle')" style="border-color: rgba(99,102,241,0.4);">
+        <div class="card-icon">🚗</div><div class="card-title">Vehicle Insurance</div>
+      </div>
+    </div>
+  </div>
 
-        // Configuration
-        const INSURANCE_DOMAINS = {
-            Health: {
-                icon: "⚕️",
-                desc: "Medical emergencies, hospitalizations, illness.",
-                auditReq: "Medical Audit",
-                auditItems: "Itemized hospital bills, discharge summary, pharmacy prescriptions."
-            },
-            Theft: {
-                icon: "🛡️",
-                desc: "Stolen property, burglary, personal loss.",
-                auditReq: "Legal Audit",
-                auditItems: "First Information Report (FIR) or Police Report confirming loss."
-            },
-            Travel: {
-                icon: "✈️",
-                desc: "Trip cancellations, lost baggage, delays.",
-                auditReq: "Logistical Audit",
-                auditItems: "Flight confirmation, boarding passes, Airline Irregularity Reports."
-            },
-            Accident: {
-                icon: "🚙",
-                desc: "Vehicle collisions, road incidents.",
-                auditReq: "Incident Audit",
-                auditItems: "Police panchnama (road accident) or certified Medico-Legal Case (MLC)."
-            }
-        };
 
-        let audioCtx;
-        function playSfx(type) {
-            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
+  <!-- ================= MULTI-STEP CLAIM SYSTEM ================= -->
+  <div id="claimSystem">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+       <h1 style="font-size: 2rem;">Vehicle Claim Terminal</h1>
+       <button class="btn btn-primary" onclick="fillMockData()" style="padding: 10px 20px;">Auto-Fill Sample Data</button>
+    </div>
+
+    <!-- Live Progress Engine -->
+    <div class="progress-container glass">
+      <div>
+         <span class="progress-stats" id="progPercent">0%</span>
+         <span style="color:white; margin-left:10px;">Complete</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progBar"></div></div>
+      <div class="progress-q" id="progText">0 / 0 Fields Required</div>
+    </div>
+
+    <div class="layout-grid">
+       
+       <!-- LEFT: FORM VIEWS -->
+       <div>
+         <!-- STEP 1: Basic Details -->
+         <div class="step-section glass active" id="step1">
+           <h2 style="margin-bottom: 30px; font-size:1.5rem; border-bottom:1px solid var(--border); padding-bottom:10px;">Step 1: Policy & Basics</h2>
+           
+           <div class="form-group req-field">
+             <label class="form-label">Policy Number *</label>
+             <div class="input-wrapper">
+               <input type="text" class="form-control" id="f_policy" placeholder="e.g. PB123456789">
+               <div class="mic-btn" onclick="triggerMic('f_policy')">🎤</div>
+             </div>
+           </div>
+           
+           <div class="form-group req-field">
+             <label class="form-label">Policyholder Name *</label>
+             <div class="input-wrapper">
+               <input type="text" class="form-control" id="f_name" placeholder="John Doe">
+               <div class="mic-btn" onclick="triggerMic('f_name')">🎤</div>
+             </div>
+           </div>
+
+           <div class="form-group req-field">
+             <label class="form-label">Registered Mobile/Email *</label>
+             <div class="input-wrapper">
+               <input type="text" class="form-control" id="f_contact" placeholder="+91 9876543210">
+               <div class="mic-btn" onclick="triggerMic('f_contact')">🎤</div>
+             </div>
+           </div>
+
+           <div class="form-group req-field">
+             <label class="form-label">Address *</label>
+             <div class="input-wrapper">
+               <input type="text" class="form-control" id="f_address" placeholder="City, State">
+               <div class="mic-btn" onclick="triggerMic('f_address')">🎤</div>
+             </div>
+           </div>
+
+           <div class="form-group req-field">
+             <label class="form-label">Vehicle Registration Number *</label>
+             <div class="input-wrapper">
+               <input type="text" class="form-control" id="f_reg" placeholder="MH 01 AB 1234">
+               <div class="mic-btn" onclick="triggerMic('f_reg')">🎤</div>
+             </div>
+           </div>
+           
+           <!-- Optional / Adaptive -->
+           <div class="form-group">
+             <label class="form-label">Engine Number (Optional)</label>
+             <div class="input-wrapper"><input type="text" class="form-control" id="f_engine"><div class="mic-btn" onclick="triggerMic('f_engine')">🎤</div></div>
+           </div>
+
+           <div class="form-group">
+             <label class="form-label">Claim Preference</label>
+             <div class="radio-group" style="margin-top:10px;">
+               <label class="radio-label"><input type="radio" name="claimType" value="Cashless" onchange="evalConditions()" checked> Cashless</label>
+               <label class="radio-label"><input type="radio" name="claimType" value="Reimbursement" onchange="evalConditions()"> Reimbursement</label>
+             </div>
+           </div>
+
+           <!-- Cond: Bank Details -->
+           <div class="cond-block" id="bankBlock">
+             <h3 style="color:var(--accent); margin-bottom:15px;">Bank Details (Reimbursement)</h3>
+             <div class="form-group req-cond">
+               <label class="form-label">Account Holder *</label>
+               <div class="input-wrapper"><input type="text" class="form-control" id="f_bank_name"><div class="mic-btn" onclick="triggerMic('f_bank_name')">🎤</div></div>
+             </div>
+             <div class="form-group req-cond">
+               <label class="form-label">Account Number *</label>
+               <div class="input-wrapper"><input type="text" class="form-control" id="f_bank_acc"><div class="mic-btn" onclick="triggerMic('f_bank_acc')">🎤</div></div>
+             </div>
+             <div class="form-group req-cond">
+               <label class="form-label">IFSC Code *</label>
+               <div class="input-wrapper"><input type="text" class="form-control" id="f_bank_ifsc"><div class="mic-btn" onclick="triggerMic('f_bank_ifsc')">🎤</div></div>
+             </div>
+           </div>
+
+         </div> <!-- End Step 1 -->
+
+         <!-- STEP 2: Incident Details -->
+         <div class="step-section glass" id="step2">
+           <h2 style="margin-bottom: 30px; font-size:1.5rem; border-bottom:1px solid var(--border); padding-bottom:10px;">Step 2: Incident Extraction</h2>
+           
+           <div class="form-group req-field">
+             <label class="form-label">Short Description (Speak directly) *</label>
+             <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:10px;">We use NLP to auto-fill Date, Location, and Type if recognized.</p>
+             <div class="input-wrapper">
+               <textarea class="form-control" id="f_desc" rows="4" placeholder="e.g. My car was stolen last night in Delhi highway..."></textarea>
+               <div class="mic-btn" style="top:10px;" onclick="triggerMicNLP('f_desc')">🎤</div>
+             </div>
+           </div>
+
+           <div class="form-group req-field">
+             <label class="form-label">Date & Time *</label>
+             <input type="datetime-local" class="form-control" id="f_date">
+           </div>
+
+           <div class="form-group req-field">
+             <label class="form-label">Location *</label>
+             <div class="input-wrapper">
+               <input type="text" class="form-control" id="f_loc" placeholder="GPS or Address">
+               <div class="mic-btn" onclick="triggerMic('f_loc')">🎤</div>
+             </div>
+           </div>
+
+           <div class="form-group req-field">
+             <label class="form-label">Type of Claim *</label>
+             <select class="form-control" id="f_type" onchange="evalConditions()">
+                <option value="">Select...</option><option value="Accident">Accident</option><option value="Theft">Theft</option><option value="Fire">Fire</option><option value="Natural Calamity">Natural Calamity</option>
+             </select>
+           </div>
+         </div>
+
+         <!-- STEP 3: Third Party & Police -->
+         <div class="step-section glass" id="step3">
+           <h2 style="margin-bottom: 30px; font-size:1.5rem; border-bottom:1px solid var(--border); padding-bottom:10px;">Step 3: Legal & Third-Party</h2>
+
+           <div class="form-group">
+             <label class="form-label">Was police informed? *</label>
+             <select class="form-control" id="f_police" onchange="evalConditions()">
+                <option value="No">No</option><option value="Yes">Yes</option>
+             </select>
+           </div>
+
+           <div class="cond-block" id="policeBlock">
+              <div class="form-group req-cond">
+                <label class="form-label">FIR Number *</label>
+                <div class="input-wrapper"><input type="text" class="form-control" id="f_fir"><div class="mic-btn" onclick="triggerMic('f_fir')">🎤</div></div>
+              </div>
+              <div class="form-group req-cond">
+                <label class="form-label">Police Station Name *</label>
+                <div class="input-wrapper"><input type="text" class="form-control" id="f_station"><div class="mic-btn" onclick="triggerMic('f_station')">🎤</div></div>
+              </div>
+           </div>
+
+           <div class="form-group mt-6">
+             <label class="form-label">Any other vehicle involved? (Third-Party) *</label>
+             <select class="form-control" id="f_third" onchange="evalConditions()">
+                <option value="No">No</option><option value="Yes">Yes</option>
+             </select>
+           </div>
+
+           <div class="cond-block" id="thirdBlock">
+              <div class="form-group req-cond">
+                <label class="form-label">Third-Party Details *</label>
+                <div class="input-wrapper"><input type="text" class="form-control" id="f_tp_details"><div class="mic-btn" onclick="triggerMic('f_tp_details')">🎤</div></div>
+              </div>
+           </div>
+         </div>
+
+         <!-- STEP 4: Documents -->
+         <div class="step-section glass" id="step4">
+           <h2 style="margin-bottom: 30px; font-size:1.5rem; border-bottom:1px solid var(--border); padding-bottom:10px;">Step 4: Smart Uploads</h2>
+           
+           <h3 style="margin-bottom:10px;">A. Mandatory Basic</h3>
+           <div class="upload-tile">📄 Upload RC, DL, Insurance Copy</div>
+
+           <h3 style="margin-bottom:10px;">B. Incident Proof</h3>
+           <div class="upload-tile">📷 Upload Vehicle Damage Photos (Min 4)</div>
+
+           <div id="condPoliceDocs" style="display:none;">
+             <h3 style="margin-bottom:10px; color:var(--error);">C. Police Documents (Mandatory for Theft/Accident)</h3>
+             <div class="upload-tile" style="border-color:var(--error);">🚔 Upload FIR Copy & Report</div>
+           </div>
+           
+           <div id="condBankDocs" style="display:none;">
+             <h3 style="margin-bottom:10px; color:var(--accent);">D. Financial Documents (For Reimbursement)</h3>
+             <div class="upload-tile" style="border-color:var(--accent);">💰 Upload Payment Receipt / Est.</div>
+           </div>
+         </div>
+
+         <!-- STEP 5: Final Review -->
+         <div class="step-section glass" id="step5">
+           <h2 style="margin-bottom: 30px; font-size:1.5rem; border-bottom:1px solid var(--border); padding-bottom:10px;">Final Review</h2>
+           <p style="color:var(--text-muted); margin-bottom:20px;">Ensure all dictated and typed parameters are correct before cryptography seals the ledger.</p>
+           
+           <div class="review-grid" id="revContainer">
+             <!-- Autopopulated -->
+           </div>
+
+           <div style="margin-top:40px; padding-top:20px; border-top:1px solid var(--border);">
+             <label class="radio-label">
+                <input type="checkbox" id="f_confirm" onchange="evalProgress()"> I confirm all entered details are accurate and true.
+             </label>
+           </div>
+         </div>
+
+         <!-- NAVIGATION BUTTONS -->
+         <div class="btn-group" style="justify-content: space-between; margin-top:40px;">
+           <button class="btn" id="btnPrev" style="display:none;" onclick="navStep(-1)">Back</button>
+           <button class="btn btn-primary" id="btnNext" onclick="navStep(1)" disabled>Next Step</button>
+         </div>
+       </div>
+
+       <!-- RIGHT: AI / VOICE CONSOLE -->
+       <div class="glass" style="height: max-content; padding: 30px; position: sticky; top: 20px;">
+         <div class="side-orb" id="nlpOrb"></div>
+         <h3 style="text-align:center; margin-bottom:20px; color:var(--accent);">AI Voice Engine</h3>
+         <p style="color:var(--text-muted); font-size:0.9rem; text-align:center; margin-bottom:30px;">
+            Click any 🎤 icon inside an input field to dictate. The AI will extract and structure the information instantly.
+         </p>
+         <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border); padding:15px; border-radius:12px; font-family:monospace; font-size:0.85rem; color:#fff;" id="logOutput">
+           > System Ready.<br>> Form modules loaded.<br>> Waiting for input...
+         </div>
+       </div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toastBox">
+    <div style="font-size:1.5rem;">✨</div>
+    <div id="toastMsg">Action Successful</div>
+  </div>
+
+  <script>
+    let currStep = 1;
+
+    // Monitor Input changes to update progression
+    document.addEventListener('input', evalProgress);
+    document.addEventListener('change', evalProgress);
+
+    function startFlow(type) {
+      if(type !== 'Vehicle') return showToast("Only Vehicle flow is open for demo.", true);
+      
+      gsap.to('#dashboardEntry', {opacity: 0, y:-50, duration: 0.5, onComplete:() => {
+        document.getElementById('dashboardEntry').style.display = 'none';
+        document.getElementById('claimSystem').style.display = 'block';
+        gsap.from('#claimSystem', {opacity:0, y:50, duration: 0.5});
+        evalConditions();
+        evalProgress();
+      }});
+      logSys(`Initiated ${type} Claim Protocol.`);
+    }
+
+    // Toggle Conditional UI blocks based on selections
+    function evalConditions() {
+      const type = document.querySelector('input[name="claimType"]:checked')?.value;
+      document.getElementById('bankBlock').classList.toggle('visible', type === 'Reimbursement');
+      document.getElementById('condBankDocs').style.display = type === 'Reimbursement' ? 'block' : 'none';
+
+      const claimReason = document.getElementById('f_type').value;
+      const polSelect = document.getElementById('f_police');
+      // Enforce Police if Theft/Accident
+      if(claimReason === 'Theft' || claimReason === 'Accident') {
+         polSelect.value = "Yes";
+         polSelect.disabled = true;
+         document.getElementById('condPoliceDocs').style.display = 'block';
+      } else {
+         polSelect.disabled = false;
+         document.getElementById('condPoliceDocs').style.display = polSelect.value === 'Yes' ? 'block' : 'none';
+      }
+      
+      document.getElementById('policeBlock').classList.toggle('visible', polSelect.value === 'Yes');
+      
+      const third = document.getElementById('f_third').value;
+      document.getElementById('thirdBlock').classList.toggle('visible', third === 'Yes');
+
+      evalProgress();
+    }
+
+    // Progression Engine
+    function evalProgress() {
+      const stepEl = document.getElementById('step' + currStep);
+      if(!stepEl) return;
+
+      let reqTotal = 0;
+      let reqFilled = 0;
+
+      // Regular req fields in current step
+      stepEl.querySelectorAll('.req-field').forEach(wrapper => {
+         const input = wrapper.querySelector('.form-control');
+         if(input) { reqTotal++; if(input.value.trim() !== '') reqFilled++; }
+      });
+      // Conditional req fields in current step
+      stepEl.querySelectorAll('.cond-block.visible .req-cond').forEach(wrapper => {
+         const input = wrapper.querySelector('.form-control');
+         if(input) { reqTotal++; if(input.value.trim() !== '') reqFilled++; }
+      });
+
+      // Confirm checkbox if step 5
+      if(currStep === 5) {
+         reqTotal++;
+         if(document.getElementById('f_confirm').checked) reqFilled++;
+      }
+
+      // Progress bar Update
+      const percent = reqTotal === 0 ? 100 : Math.round((reqFilled / reqTotal) * 100);
+      document.getElementById('progPercent').innerText = percent + '%';
+      document.getElementById('progBar').style.width = percent + '%';
+      document.getElementById('progText').innerText = `${reqFilled} / ${reqTotal} Fields Required`;
+
+      // Validation locks
+      document.getElementById('btnNext').disabled = (reqFilled < reqTotal);
+    }
+
+    function navStep(dir) {
+      document.getElementById('step' + currStep).classList.remove('active');
+      currStep += dir;
+      
+      if(currStep === 5) buildReview();
+      
+      document.getElementById('step' + currStep).classList.add('active');
+      document.getElementById('btnPrev').style.display = currStep === 1 ? 'none' : 'block';
+      
+      if(currStep === 5) {
+        document.getElementById('btnNext').innerText = "Submit Claim & Sign";
+        document.getElementById('btnNext').onclick = submitFinal;
+      } else {
+        document.getElementById('btnNext').innerText = "Next Step";
+        document.getElementById('btnNext').onclick = () => navStep(1);
+      }
+      evalProgress();
+      logSys(`Advanced to Step ${currStep}.`);
+    }
+
+    function buildReview() {
+       const box = document.getElementById('revContainer');
+       box.innerHTML = '';
+       const map = [
+         {label: "Policy", id: "f_policy"}, {label: "Name", id: "f_name"},
+         {label: "Vehicle", id: "f_reg"}, {label: "Event Type", id: "f_type"},
+         {label: "Location", id: "f_loc"}, {label: "Date/Time", id: "f_date"}
+       ];
+       map.forEach(m => {
+          const val = document.getElementById(m.id).value;
+          if(val) box.innerHTML += `<div class="review-item"><div style="font-size:0.8rem; color:var(--text-muted);">${m.label}</div><div style="font-size:1.1rem; font-weight:600;">${val}</div></div>`;
+       });
+    }
+
+    function submitFinal() {
+       showToast("Claim Submitted Successfully!");
+       setTimeout(()=> window.location.reload(), 2000);
+    }
+
+    // Voice Simulation Engine
+    function triggerMic(inputId) {
+      const orb = document.getElementById('nlpOrb');
+      const input = document.getElementById(inputId);
+      const btn = input.nextElementSibling;
+      
+      orb.classList.add('active');
+      btn.classList.add('recording');
+      logSys(`Mic active for [${inputId}]. Listening...`);
+      
+      setTimeout(() => {
+         orb.classList.remove('active');
+         btn.classList.remove('recording');
+         
+         // Demo mappings based on input
+         let text = "Sample Audio Transcription " + Math.floor(Math.random()*100);
+         if(inputId.includes('policy')) text = "PB123456789";
+         if(inputId.includes('name')) text = "Divyansh Budhiraja";
+         if(inputId.includes('reg')) text = "HR26AB1234";
+         if(inputId.includes('loc')) text = "Delhi Highway";
+
+         input.value = text;
+         logSys(`Recognized: "${text}"`);
+         showToast("Audio converted to text.");
+         evalProgress();
+      }, 2000);
+    }
+
+    function triggerMicNLP(inputId) {
+      const orb = document.getElementById('nlpOrb');
+      const input = document.getElementById(inputId);
+      const btn = input.nextElementSibling;
+      
+      orb.classList.add('active');
+      btn.classList.add('recording');
+      logSys(`NLP Mic active. Listening to entire context...`);
+
+      setTimeout(() => {
+         orb.classList.remove('active');
+         btn.classList.remove('recording');
+         
+         const text = "My car was stolen last night in Delhi highway.";
+         input.value = text;
+         
+         // Perform NLP extraction magically
+         logSys(`Extracting NLP Entities...`);
+         setTimeout(()=>{
+            document.getElementById('f_type').value = "Theft";
+            document.getElementById('f_loc').value = "Delhi highway";
+            const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('f_date').value = now.toISOString().slice(0,16);
             
-            if (type === 'hover') {
-                osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-            } else if (type === 'select') {
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
-            } else if (type === 'scan') {
-                osc.type = 'square'; osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-                osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.6);
-                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.6);
-            }
-        }
+            showToast("NLP Auto-Filled Date, Location, and Type.");
+            evalConditions();
+            evalProgress();
+         }, 800);
 
-        function AeternaApp() {
-            // States: 
-            // 0 = Select Discipline
-            // 1 = Narration (Mic Active)
-            // 2 = Analyzing Real-Time Voice (NLP simulation)
-            // 3 = Audit Document Request
-            // 4 = AI Scanning Document (Finding flaws)
-            // 5 = Resolution / Approval
-            
-            const [phase, setPhase] = useState(0);
-            const [selectedType, setSelectedType] = useState(null);
-            
-            // Audio & Transcription
-            const [isListening, setIsListening] = useState(false);
-            const [transcript, setTranscript] = useState("");
-            const [systemMsg, setSystemMsg] = useState("");
-            
-            // 4 Essential Fields (Extracted)
-            const [extractedData, setExtractedData] = useState({
-                kyc: "Awaiting...",
-                nexus: "Awaiting...",
-                thirdParty: "Awaiting...",
-                bankInfo: "Secured & Verified (AES-256)"
-            });
+      }, 2500);
+    }
 
-            // AI Audit Results
-            const [auditResults, setAuditResults] = useState({
-                mismatch: "Pending",
-                originals: "Pending",
-                timeline: "Pending",
-                disclosure: "Pending"
-            });
+    function fillMockData() {
+      document.getElementById('f_policy').value = "PB123456789";
+      document.getElementById('f_name').value = "Divyansh Budhiraja";
+      document.getElementById('f_contact').value = "+91 9876543210";
+      document.getElementById('f_address').value = "Chandigarh, India";
+      document.getElementById('f_reg').value = "HR26AB1234";
+      document.getElementById('f_type').value = "Accident";
+      evalConditions();
+      showToast("Mock Data Formulated perfectly.");
+    }
 
-            const srRef = useRef(null);
+    function showToast(msg, err=false) {
+      const t = document.getElementById('toastBox');
+      document.getElementById('toastMsg').innerText = msg;
+      t.style.borderLeftColor = err ? 'var(--error)' : 'var(--primary)';
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
 
-            // TTS
-            const speak = (txt, callback) => {
-                setSystemMsg(txt);
-                window.speechSynthesis.cancel();
-                const u = new SpeechSynthesisUtterance(txt);
-                u.pitch = 0.95; u.rate = 1.05;
-                if(callback) u.onend = callback;
-                window.speechSynthesis.speak(u);
-            };
-
-            const selectDomain = (type) => {
-                playSfx('select');
-                setSelectedType(type);
-                setPhase(1);
-                
-                setTimeout(() => {
-                    speak(`Aeterna Protocol active for ${type}. Please narrate the exact timeline and nature of the incident.`, () => {
-                        triggerMic();
-                    });
-                }, 800);
-            };
-
-            const triggerMic = () => {
-                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if(!SpeechRec) return alert("Browser does not support Speech API. Use Chrome/Safari.");
-                
-                setIsListening(true);
-                srRef.current = new SpeechRec();
-                srRef.current.continuous = false;
-                srRef.current.start();
-                
-                srRef.current.onresult = (e) => {
-                    const txt = e.results[0][0].transcript;
-                    setTranscript(txt);
-                    setIsListening(false);
-                    processTranscription(txt);
-                };
-                
-                srRef.current.onerror = () => {
-                    setIsListening(false);
-                    speak("I didn't hear that. Please tap the orb and try again.");
-                };
-            };
-
-            const processTranscription = (txt) => {
-                setPhase(2);
-                speak("Analyzing forensic nexus of loss via NLP...");
-                
-                // Simulate "Real AI Data Analysis"
-                setTimeout(() => {
-                    // Primitive exact extraction logic
-                    let location = "Unknown Location";
-                    if(txt.toLowerCase().includes('in ') || txt.toLowerCase().includes('at ')) {
-                        const words = txt.split(' ');
-                        const atIndex = words.findIndex(w => w.toLowerCase() === 'in' || w.toLowerCase() === 'at');
-                        if (atIndex !== -1 && words[atIndex+1]) location = words[atIndex+1];
-                    }
-
-                    setExtractedData(p => ({
-                        ...p,
-                        kyc: "Aadhaar / PAN Match Confirmed",
-                        nexus: `"${txt.slice(0, 40)}..."`,
-                        thirdParty: `Detected Entities: [${location.toUpperCase()}]`
-                    }));
-
-                    setPhase(3);
-                    const req = INSURANCE_DOMAINS[selectedType].auditReq;
-                    const items = INSURANCE_DOMAINS[selectedType].auditItems;
-                    speak(`Nexus captured. To satisfy the ${req}, I require the following original proofs: ${items}. Please upload the document.`);
-                }, 3000);
-            };
-
-            const handleDocumentDrop = () => {
-                if(phase !== 3) return;
-                playSfx('scan');
-                setPhase(4);
-                speak("Executing Deep AI Audit. Verifying cryptographic signatures, optical character alignment, and timestamp metadata.");
-                
-                // Simulate progressive checks for the 4 Pitfalls
-                setTimeout(() => setAuditResults(p => ({...p, mismatch: "Passed (100% Name Match)"})), 1500);
-                setTimeout(() => setAuditResults(p => ({...p, originals: "Passed (Holographic Seal Valid)"})), 2500);
-                setTimeout(() => setAuditResults(p => ({...p, timeline: "Passed (Event within 24h Legal Window)"})), 3500);
-                setTimeout(() => setAuditResults(p => ({...p, disclosure: "Passed (No Prior Conflicts)"})), 4500);
-
-                setTimeout(() => {
-                    playSfx('select');
-                    setPhase(5);
-                    speak("The Audit is clean. All 4 statutory requirements are met. The claim has been immutably settled directly to your bank.");
-                }, 6000);
-            };
-
-            return (
-                <div className="flex flex-col h-screen p-8 text-white">
-                    {/* Header */}
-                    <div className="flex justify-between items-center mb-10 w-full max-w-[1600px] mx-auto z-20">
-                        <div className="font-mono text-xl tracking-[0.2em] uppercase text-gold drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]">
-                            AETERNA VAULT
-                        </div>
-                        <div className="font-mono text-xs text-gray-500 border border-white/10 px-4 py-2 rounded-full glass-panel">
-                            Statutory AI Compliance Engine v4.0
-                        </div>
-                    </div>
-
-                    <div className="flex-1 w-full max-w-[1600px] mx-auto z-20 flex flex-col justify-center relative pb-10">
-                        
-                        {/* PHASE 0: Selection */}
-                        {phase === 0 && (
-                            <div className="fade-in w-full">
-                                <h1 className="text-center font-sans text-3xl font-light mb-4">Establish the Nexus of Loss</h1>
-                                <p className="text-center font-mono text-gray-400 text-sm mb-16 tracking-widest uppercase">Select Insurance Discipline to enforce legal audit requirements</p>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 px-4">
-                                    {Object.entries(INSURANCE_DOMAINS).map(([key, data]) => (
-                                        <div key={key} 
-                                             className="glass-panel p-8 rounded-2xl tilt-card flex flex-col items-center justify-center text-center cursor-pointer min-h-[300px]"
-                                             onMouseEnter={() => playSfx('hover')}
-                                             onClick={() => selectDomain(key)}>
-                                            <div className="text-5xl mb-6 tilt-card-inner">{data.icon}</div>
-                                            <h2 className="font-sans text-xl font-medium mb-3 tilt-card-inner text-white">{key}</h2>
-                                            <p className="font-mono text-xs text-gray-400 mb-6 tilt-card-inner leading-relaxed">{data.desc}</p>
-                                            <div className="border-t border-white/10 pt-4 mt-auto tilt-card-inner w-full">
-                                                <span className="text-[10px] uppercase text-gold tracking-widest font-bold block mb-1">Required Audit:</span>
-                                                <span className="text-xs text-gray-300 font-mono">{data.auditReq}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* PHASE 1 - 5: Execution Core */}
-                        {phase > 0 && (
-                            <div className="flex w-full h-full gap-8 justify-between items-stretch fade-in">
-                                
-                                {/* LEFT: 4 Essential Fields */}
-                                <div className="w-[380px] glass-panel p-8 rounded-2xl flex flex-col flex-shrink-0">
-                                    <h3 className="font-mono text-xs text-gold uppercase tracking-[0.2em] mb-8 border-b border-white/10 pb-4">Four Essential Fields</h3>
-                                    
-                                    <div className="flex flex-col gap-6 flex-1 justify-center">
-                                        <EssentialField label="KYC Authentication" value={extractedData.kyc} icon="🆔" status={phase >= 3 ? "verified" : "pending"} />
-                                        <EssentialField label="The Nexus of Loss" value={extractedData.nexus} icon="📜" status={phase >= 3 ? "verified" : "pending"} />
-                                        <EssentialField label="Third-Party Verification" value={extractedData.thirdParty} icon="🏢" status={phase >= 3 ? "verified" : "pending"} />
-                                        <EssentialField label="Bank / Settlement Ledger" value={extractedData.bankInfo} icon="🏦" status="verified" />
-                                    </div>
-                                    <div className="mt-auto pt-6 border-t border-white/10">
-                                        <div className="text-xs font-mono text-gray-500">Domain: <span className="text-white">{selectedType}</span></div>
-                                    </div>
-                                </div>
-
-                                {/* CENTER: AI Orb & Conversation */}
-                                <div className="flex-1 flex flex-col items-center justify-center -mt-10 px-8">
-                                    {phase <= 3 && (
-                                        <div className="ai-orb-container cursor-pointer mb-10" onClick={() => phase !== 2 && triggerMic()}>
-                                            <div className="orb-rings"></div>
-                                            <div className={`ai-orb ${isListening || phase === 2 ? 'listening' : ''}`}></div>
-                                        </div>
-                                    )}
-
-                                    {/* Document Upload Zone */}
-                                    {phase >= 3 && phase < 5 && (
-                                        <div className={`w-[400px] h-[250px] border-2 border-dashed border-gold/40 rounded-2xl glass-panel flex flex-col items-center justify-center cursor-pointer relative overflow-hidden transition hover:bg-white/5 ${phase===4?'animate-pulse border-white/40':''}`} 
-                                             onClick={handleDocumentDrop}>
-                                            {phase === 4 && <div className="scan-line"></div>}
-                                            <div className="text-4xl mb-4">{phase===3 ? '📄' : '🔍'}</div>
-                                            <h4 className="font-sans font-medium text-lg text-gold mb-2">{phase === 3 ? `Upload ${INSURANCE_DOMAINS[selectedType].auditReq}` : 'Analyzing Audit Integrity...'}</h4>
-                                            <p className="font-mono text-xs text-gray-400 text-center px-8">
-                                                {phase === 3 ? `Requirement: ${INSURANCE_DOMAINS[selectedType].auditItems}` : 'Verifying holographic seals and regulatory compliance...'}
-                                            </p>
-                                        </div>
-                                    )}
-                                    {phase === 5 && (
-                                        <div className="w-[400px] text-center fade-in">
-                                            <div className="w-24 h-24 rounded-full border-4 border-green-500 bg-green-500/10 flex items-center justify-center text-5xl mx-auto mb-6 text-green-400 shadow-[0_0_50px_rgba(34,197,94,0.4)]">✓</div>
-                                            <h2 className="text-3xl font-sans font-light mb-2 text-white">Full Audit Passed</h2>
-                                            <p className="text-gray-400 font-mono text-sm leading-relaxed">Statutory requirements satisfied. Settlement dispatched to ledger.</p>
-                                        </div>
-                                    )}
-
-                                    {/* Subtitle engine */}
-                                    <div className="mt-12 text-center h-[80px]">
-                                        <h2 className="font-sans text-2xl md:text-3xl font-light text-white leading-relaxed">
-                                            {systemMsg ? `"${systemMsg}"` : ""}
-                                        </h2>
-                                        {transcript && phase < 3 && (
-                                            <div className="mt-4 font-mono text-sm text-gray-400">
-                                                Transcribed: <span className="text-white">"{transcript}"</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    
-                                    {/* Audio Waveform */}
-                                    {phase < 3 && (
-                                        <div className="mt-8 waveform">
-                                            {Array.from({length:16}).map((_,i) => <div key={i} className={`wave-bar ${isListening?'active':''}`} style={{animationDelay:`${Math.random()*0.5}s`}}></div>)}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* RIGHT: Real-time Statutory Audits */}
-                                <div className="w-[380px] glass-panel p-8 rounded-2xl flex flex-col flex-shrink-0">
-                                    <div className="flex justify-between items-end border-b border-white/10 pb-4 mb-8">
-                                        <h3 className="font-mono text-xs text-gold uppercase tracking-[0.2em]">Deep AI Audit log</h3>
-                                        <span className="font-mono text-[10px] text-green-400 px-2 py-1 bg-green-900/40 rounded border border-green-500/30">Active</span>
-                                    </div>
-
-                                    <div className="flex flex-col gap-6 flex-1">
-                                        <AuditCheck label="1. Name / ID Verification" desc="Mismatch Failure Check" status={auditResults.mismatch} />
-                                        <AuditCheck label="2. Authenticity Verification" desc="Missing Originals Check" status={auditResults.originals} />
-                                        <AuditCheck label="3. Temporal Compliance" desc="Timeline Gaps Check (24-48h)" status={auditResults.timeline} />
-                                        <AuditCheck label="4. Regulatory Validation" desc="Non-Disclosure & API Match" status={auditResults.disclosure} />
-                                    </div>
-                                </div>
-
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
-        }
-
-        // Mini Components
-        function EssentialField({label, value, icon, status}) {
-            const isLoading = value === 'Awaiting...';
-            return (
-                <div className="flex gap-4 items-center">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl shrink-0 transition-all ${isLoading ? 'bg-white/5 border border-white/10 grayscale opacity-50' : 'bg-gold/10 border border-gold/40 shadow-[0_0_15px_rgba(212,175,55,0.2)]'}`}>
-                        {icon}
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                        <div className="font-mono text-[9px] uppercase tracking-widest text-gray-500 mb-1 flex justify-between w-full">
-                            {label}
-                            {status === 'verified' && <span className="text-green-400">✓</span>}
-                        </div>
-                        <div className={`font-sans text-sm truncate ${isLoading ? 'text-gray-600' : 'text-white'}`}>
-                            {value}
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        function AuditCheck({label, desc, status}) {
-            const isPending = status === 'Pending';
-            return (
-                <div className="border border-white/5 bg-black/20 p-4 rounded-xl relative overflow-hidden group hover:border-gold/30 transition">
-                    <div className="font-sans text-sm font-medium text-white mb-1">{label}</div>
-                    <div className="font-mono text-[10px] text-gray-500 mb-3">{desc}</div>
-                    <div className={`font-mono text-[11px] font-bold ${isPending ? 'text-gray-600' : 'text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]'}`}>
-                        {isPending ? 'AWAITING DOCUMENT LAYER...' : status}
-                    </div>
-                    {!isPending && <div className="absolute top-4 right-4 text-green-400">✅</div>}
-                </div>
-            );
-        }
-
-        const root = ReactDOM.createRoot(document.getElementById('react-root'));
-        root.render(<AeternaApp />);
-    </script>
-
-    <!-- Three.js Background Implementation -->
-    <script>
-        const scene = new THREE.Scene();
-        // Dark blue fog like extreme midnight
-        scene.fog = new THREE.FogExp2(0x030712, 0.05);
-
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
-        camera.position.z = 20;
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        document.getElementById('three-container').appendChild(renderer.domElement);
-
-        // Grid particles to represent "Legal Data Audits" mapping out
-        const geometry = new THREE.BufferGeometry();
-        const particlesCount = 2500;
-        const posArray = new Float32Array(particlesCount * 3);
-
-        for(let i = 0; i < particlesCount * 3; i++) {
-            posArray[i] = (Math.random() - 0.5) * 80;
-        }
-
-        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        const material = new THREE.PointsMaterial({
-            size: 0.08,
-            color: 0xD4AF37, // Gold
-            transparent: true,
-            opacity: 0.6,
-            blending: THREE.AdditiveBlending
-        });
-
-        const particlesMesh = new THREE.Points(geometry, material);
-        scene.add(particlesMesh);
-
-        // Lines connecting points (Nexus)
-        const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.03 });
-        const lineGeo = new THREE.BufferGeometry();
-        const lineArr = new Float32Array(500 * 3);
-        for(let i=0; i<1500; i++) lineArr[i] = (Math.random() - 0.5) * 60;
-        lineGeo.setAttribute('position', new THREE.BufferAttribute(lineArr, 3));
-        const lines = new THREE.LineSegments(lineGeo, lineMaterial);
-        scene.add(lines);
-
-        // Interactive mouse
-        let mouseX = 0; let mouseY = 0;
-        document.addEventListener('mousemove', (e) => {
-            mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-            mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
-        });
-
-        const clock = new THREE.Clock();
-
-        function animate() {
-            requestAnimationFrame(animate);
-            const elapsedTime = clock.getElapsedTime();
-
-            particlesMesh.rotation.y = elapsedTime * 0.03;
-            particlesMesh.rotation.x = elapsedTime * 0.01;
-            lines.rotation.y = elapsedTime * -0.02;
-
-            // Follow mouse slightly
-            camera.position.x += (mouseX * 5 - camera.position.x) * 0.05;
-            camera.position.y += (mouseY * 5 - camera.position.y) * 0.05;
-            camera.lookAt(scene.position);
-
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    </script>
+    function logSys(msg) {
+      const l = document.getElementById('logOutput');
+      l.innerHTML += `<br>> ${msg}`;
+      l.scrollTop = l.scrollHeight;
+    }
+  </script>
 </body>
 </html>
