@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETERNA VAULT - Zero Input OS</title>
+    
+    <!-- React & Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cobalt: '#0A0F1E',
+                        obsidian: '#02040A',
+                        gold: '#D4AF37',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Space Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Three.js, GSAP & QRCode -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Mono&display=swap');
+        body { margin: 0; overflow: hidden; background: #02040A; color: white; -webkit-font-smoothing: antialiased;}
+        #three-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
+        #react-root { position: relative; z-index: 10; width: 100vw; height: 100vh; pointer-events: none; }
+        .pointer-auto { pointer-events: auto; }
+
+        /* Luxury Glassmorphism */
+        .glass-panel {
+            background: rgba(10, 15, 30, 0.7);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 0 30px rgba(212, 175, 55, 0.05);
+        }
+        
+        .hud-scanline {
+            position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            animation: scan 3s linear infinite; opacity: 0.6; z-index: 50; pointer-events: none;
+        }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        /* Dynamic Vault States */
+        .vault-alert::after {
+            content:''; position:fixed; inset:0; pointer-events:none; z-index: 99;
+            box-shadow: inset 0 0 150px rgba(239, 68, 68, 0.4);
+            animation: redPulse 0.5s infinite alternate;
+        }
+        @keyframes redPulse { 0% { opacity: 0.5; } 100% { opacity: 1; backdrop-filter: blur(2px); } }
+
+        /* Mic Ring UI over Three.js Canvas */
+        .mic-ring {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 350px; height: 350px; border-radius: 50%;
+            border: 2px solid transparent; z-index: 2; pointer-events: none;
+            transition: 0.3s;
+        }
+        .mic-active-ring {
+            border-color: rgba(212, 175, 55, 0.6);
+            box-shadow: 0 0 60px rgba(212, 175, 55, 0.4), inset 0 0 40px rgba(212, 175, 55, 0.2);
+            animation: micGlow 1.5s infinite alternate;
+        }
+        @keyframes micGlow { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.05); } }
+
+        /* Certificates */
+        #cert-container { opacity: 0; transform: translateY(40px) scale(0.9); transition: all 1s cubic-bezier(0.16, 1, 0.3, 1); }
+        #cert-container.show { opacity: 1; transform: translateY(0) scale(1); }
+    </style>
+</head>
+<body>
+
+    <div id="three-canvas"></div>
+    <div id="mic-ring-ui" class="mic-ring"></div>
+    <div id="react-root"></div>
+
+    <!-- Application Execution -->
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Sound Synthesis (No external files needed)
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+        
+        function initAudio() {
+            if(!audioCtx) audioCtx = new AudioContext();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playThud() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            gain.gain.setValueAtTime(1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        function playAlert() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(50, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.2);
+            gain.gain.linearRampToValueAtTime(0.6, audioCtx.currentTime + 0.4);
+            osc.start(); osc.stop(audioCtx.currentTime + 2);
+        }
+
+        /* --- THREE.JS VAULT ENGINE --- */
+        let scene, camera, renderer, vaultGroup, bolts = [];
+        
+        function initThree() {
+            const canvas = document.getElementById('three-canvas');
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x02040A, 0.03);
+
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 100);
+            camera.position.z = 16;
+
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            canvas.appendChild(renderer.domElement);
+
+            // Lighting
+            scene.add(new THREE.AmbientLight(0x0A0F1E, 2));
+            const pLight1 = new THREE.PointLight(0xD4AF37, 2, 50); pLight1.position.set(5, 5, 5); scene.add(pLight1);
+            const pLight2 = new THREE.PointLight(0x4466ff, 2, 50); pLight2.position.set(-5, -5, 2); scene.add(pLight2);
+
+            vaultGroup = new THREE.Group();
+            
+            // Vault Body
+            const cylGeo = new THREE.CylinderGeometry(4.5, 4.5, 1, 64);
+            const matDark = new THREE.MeshPhysicalMaterial({ color: 0x02040A, metalness: 0.9, roughness: 0.1, clearcoat: 1.0 });
+            const vaultBody = new THREE.Mesh(cylGeo, matDark);
+            vaultBody.rotation.x = Math.PI / 2;
+            vaultGroup.add(vaultBody);
+
+            // Quantum Ring
+            const tubeGeo = new THREE.TorusGeometry(4.6, 0.15, 16, 100);
+            const matGold = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 1, roughness: 0.2 });
+            const rim = new THREE.Mesh(tubeGeo, matGold);
+            vaultGroup.add(rim);
+            
+            // Core Plate
+            const plateGeo = new THREE.CylinderGeometry(2, 2, 1.2, 32);
+            const plate = new THREE.Mesh(plateGeo, matGold);
+            plate.rotation.x = Math.PI / 2;
+            vaultGroup.add(plate);
+
+            // The 4 Quantum Bolts
+            for(let i=0; i<4; i++) {
+                const bGeo = new THREE.BoxGeometry(0.6, 2.5, 0.6);
+                const bolt = new THREE.Mesh(bGeo, matGold);
+                const angle = (i * Math.PI) / 2;
+                // Start extended (unlocked state logically means extending them OUT to lock into wall, or vice versa. 
+                // Let's say pulling them IN is unlocking.
+                bolt.position.x = Math.cos(angle) * 3;
+                bolt.position.y = Math.sin(angle) * 3;
+                bolt.rotation.z = angle;
+                bolt.userData = { angle: angle, isLocked: false };
+                bolts.push(bolt);
+                vaultGroup.add(bolt);
+            }
+
+            scene.add(vaultGroup);
+
+            // Floating Atmosphere
+            const pGeo = new THREE.BufferGeometry();
+            const pPos = new Float32Array(300 * 3);
+            for(let i=0; i<300*3; i++) { pPos[i] = (Math.random()-0.5)*30; }
+            pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+            const pMat = new THREE.PointsMaterial({ color: 0xD4AF37, size: 0.04, transparent:true, opacity:0.3 });
+            const particles = new THREE.Points(pGeo, pMat);
+            scene.add(particles);
+
+            function animate() {
+                requestAnimationFrame(animate);
+                vaultGroup.rotation.z += 0.001;
+                particles.rotation.y += 0.002;
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        // Lock Bolt Function (Moves outward to "Lock" into the frame, with thud)
+        function triggerBoltLock(index) {
+            if(!bolts[index]) return;
+            const b = bolts[index];
+            gsap.to(b.position, {
+                x: Math.cos(b.userData.angle) * 4.6,
+                y: Math.sin(b.userData.angle) * 4.6,
+                duration: 0.5,
+                ease: "back.out(1.7)",
+                onComplete: () => playThud()
+            });
+            gsap.to(vaultGroup.scale, { x: 1.02, y: 1.02, z: 1.02, duration: 0.1, yoyo: true, repeat: 1 });
+        }
+
+        function triggerVaultOpen() {
+            // Retract all bolts
+            bolts.forEach(b => {
+                gsap.to(b.position, { x: Math.cos(b.userData.angle)*2, y: Math.sin(b.userData.angle)*2, duration: 1, ease: "power2.inOut" });
+            });
+            setTimeout(() => {
+                gsap.to(vaultGroup.rotation, { y: Math.PI / -2.2, duration: 2.5, ease: "power2.inOut" });
+                gsap.to(vaultGroup.position, { x: 8, z: -8, duration: 2.5, ease: "power2.inOut" });
+                
+                // Show certificate
+                document.getElementById('cert-container').classList.add('show');
+            }, 1000);
+        }
+
+        function triggerRedPulse() {
+            document.body.classList.add('vault-alert');
+            playAlert();
+        }
+
+        /* --- REACT AETERNA APP --- */
+        function AeternaApp() {
+            const [layer, setLayer] = useState('idle'); // idle, interacting, fraud, success
+            const [micActive, setMicActive] = useState(false);
+            const [logs, setLogs] = useState(["SYSTEM STANDBY. Click 'Initialize Security Node' to begin."]);
+            const [cardData, setCardData] = useState(null);
+
+            useEffect(() => {
+                initThree();
+                window.addEventListener('resize', () => {
+                    camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }, []);
+
+            // Mic visual binding
+            useEffect(() => {
+                const ring = document.getElementById('mic-ring-ui');
+                if(micActive) ring.classList.add('mic-active-ring');
+                else ring.classList.remove('mic-active-ring');
+            }, [micActive]);
+
+            // TTS & STT Web Audio Engine
+            const speakAndListen = (text, expectedAction) => {
+                if(layer === 'fraud') return;
+                
+                const synth = window.speechSynthesis;
+                synth.cancel();
+                setLogs(p => [...p, `[AGENT]: ${text}`]);
+                
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.pitch = 0.8; utter.rate = 1.05;
+                
+                utter.onend = () => {
+                    // Automatically trigger mic when done speaking!
+                    setMicActive(true);
+                    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    if(!SpeechRec) { alert("Web Speech API not supported."); return; }
+                    
+                    const recog = new SpeechRec();
+                    recog.start();
+                    recog.onresult = (e) => {
+                        const transcript = e.results[0][0].transcript;
+                        setMicActive(false);
+                        setLogs(p => [...p, `[USER]: "${transcript}"`]);
+                        expectedAction(transcript.toLowerCase());
+                    };
+                    recog.onerror = () => setMicActive(false);
+                };
+                synth.speak(utter);
+            };
+
+            const initiateSequence = () => {
+                initAudio(); // Required to unlock browser audio context
+                setLayer('interacting');
+                speakAndListen(
+                    "Authentication required. State your purpose: Health, Theft, Travel, or Accident.", 
+                    handleDomainResponse
+                );
+            };
+
+            const handleDomainResponse = (res) => {
+                if(res.includes('accident') || res.includes('ambala')) {
+                    // Bolt 1: Identity
+                    setTimeout(() => triggerBoltLock(0), 500); 
+                    
+                    setTimeout(() => {
+                        setCardData({ title: "Data Integrity Card", type: "GPS Source Truth", loc: "Ambala, IN", time: "11:56 PM", match: "TRUE" });
+                        speakAndListen(
+                            "I have verified your location as Ambala at 11:56 PM via GPS metadata cross-reference. Is this correct?", 
+                            handleVerificationResponse
+                        );
+                    }, 1500);
+                } 
+                else if(res.includes('delhi')) {
+                   // PREDICTIVE FRAUD TRIGGER
+                   setLayer('fraud');
+                   triggerRedPulse();
+                   setLogs(p => [...p, `[CRITICAL WARNING]: User location mismatch. Device IP resolves to Ambala. Fraud protocol enacted.`]);
+                }
+                else {
+                    speakAndListen("I did not catch that. State Health, Theft, Travel, or Accident.", handleDomainResponse);
+                }
+            };
+
+            const handleVerificationResponse = (res) => {
+                if(res.includes('confirm') || res.includes('yes') || res.includes('correct')) {
+                    // Bolt 2: Data
+                    triggerBoltLock(1);
+                    setLogs(p => [...p, `[SYS]: User confirmation logged. Securing quantum bolts.`]);
+                    
+                    setTimeout(() => {
+                        // Bolt 3: Verification
+                        triggerBoltLock(2);
+                        setLogs(p => [...p, `[SYS]: Metadata Verification Lock engaged.`]);
+                    }, 1200);
+
+                    setTimeout(() => {
+                        // Bolt 4: Payout
+                        triggerBoltLock(3);
+                        setLayer('success');
+                        
+                        const synth = window.speechSynthesis;
+                        const utter = new SpeechSynthesisUtterance("All audits cleared. Central Vault mechanics disengaging. Generating Smart Insurance Certificate.");
+                        utter.pitch=0.8; synth.speak(utter);
+
+                        triggerVaultOpen();
+                        
+                        // Generate QR dynamically
+                        setTimeout(() => {
+                            document.getElementById('qrcode').innerHTML = "";
+                            new QRCode(document.getElementById("qrcode"), { text: "NWG-9842: SMART CERTIFICATE VERIFIED", width: 100, height: 100, colorDark: "#000", colorLight: "#fff" });
+                        }, 2500);
+
+                    }, 2400);
+                } else {
+                    setLayer('fraud');
+                    triggerRedPulse();
+                    setLogs(p => [...p, `[CRITICAL WARNING]: Manual validation failed. Fraud monitoring alerted.`]);
+                }
+            };
+
+            return (
+                <div className="w-full h-full p-8 flex flex-col justify-between pointer-events-none">
+                    <div className="hud-scanline"></div>
+                    
+                    {/* TOP HUD ROW */}
+                    <div className="flex justify-between items-start z-20 pointer-auto">
+                        <div>
+                            <h1 className="text-3xl font-mono font-bold tracking-widest text-gold drop-shadow-[0_0_15px_rgba(212,175,55,0.8)]">AETERNA</h1>
+                            <p className="font-mono text-[10px] text-gray-400 mt-1 tracking-widest uppercase">Zero-Input Terminal</p>
+                        </div>
+                        
+                        <div className="flex gap-4">
+                            <div className="glass-panel px-4 py-3 rounded-xl flex flex-col items-center justify-center">
+                                <span className="font-mono text-[9px] text-gray-400 uppercase mb-1">Trust Score</span>
+                                <span className={`font-mono text-lg font-bold ${layer==='fraud' ? 'text-red-500' : 'text-green-400'}`}>
+                                    {layer==='fraud' ? '08' : '99'}
+                                </span>
+                            </div>
+                            <div className="glass-panel px-5 py-3 rounded-xl flex flex-col gap-1">
+                                <span className="font-mono text-[9px] text-gray-400 uppercase">System Status</span>
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full ${layer === 'fraud' ? 'bg-red-500 shadow-[0_0_8px_#ef4444]' : 'bg-green-400 shadow-[0_0_8px_#4ade80]'}`}></div>
+                                    <span className="font-mono text-xs text-white">API LINKED</span>
+                                </div>
+                            </div>
+                            <div className="glass-panel px-5 py-3 rounded-xl flex flex-col gap-1 border border-red-500/30">
+                                <span className="font-mono text-[9px] text-red-400 uppercase">Live Fraud Monitoring</span>
+                                <span className="font-mono text-xs text-white uppercase">{layer === 'fraud' ? 'BREACH DETECTED' : 'ACTIVE GUARD'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* MIDDLE LEFT: Dialog & Card */}
+                    <div className="flex justify-between items-center z-20 pointer-auto">
+                        <div className="w-[380px] flex flex-col gap-6">
+                            
+                            {/* Terminal Window */}
+                            <div className="glass-panel p-5 rounded-2xl h-[300px] flex flex-col">
+                                <div className="text-gold text-xs font-mono uppercase tracking-widest border-b border-gold/20 pb-2 mb-3">Terminal Logs</div>
+                                <div className="font-mono text-[11px] text-gray-300 flex-1 overflow-y-auto flex flex-col gap-2">
+                                    {logs.map((L, i) => (
+                                        <div key={i} className={`p-2 rounded ${L.startsWith('[USER]') ? 'bg-white/5 border border-white/10' : (L.includes('WARNING') ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 'bg-gold/10 text-gold border border-gold/20')}`}>
+                                            {L}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Initiation Button */}
+                            {layer === 'idle' && (
+                                <button onClick={initiateSequence} className="glass-panel p-4 rounded-xl font-mono text-xs text-gold uppercase tracking-widest hover:bg-gold/10 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all">
+                                    Initialize Security Node
+                                </button>
+                            )}
+
+                        </div>
+
+                        {/* Mid Right: Verification Card popping in */}
+                        <div className="w-[300px]">
+                            {cardData && layer !== 'fraud' && layer !== 'success' && (
+                                <div className="glass-panel p-6 rounded-2xl animate-[slideIn_0.5s_ease-out]">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="font-mono text-xs text-gold uppercase tracking-widest">{cardData.title}</h3>
+                                        <span className="animate-pulse w-2 h-2 bg-gold rounded-full"></span>
+                                    </div>
+                                    <div className="space-y-3 font-mono text-[11px]">
+                                        <div className="flex justify-between border-b border-white/5 pb-2"><span className="text-gray-500">Source</span><span className="text-white">{cardData.type}</span></div>
+                                        <div className="flex justify-between border-b border-white/5 pb-2"><span className="text-gray-500">Node Loc</span><span className="text-white">{cardData.loc}</span></div>
+                                        <div className="flex justify-between border-b border-white/5 pb-2"><span className="text-gray-500">Timestamp</span><span className="text-white text-right">{cardData.time}</span></div>
+                                        <div className="flex justify-between pt-1"><span className="text-gray-500">Match Integrity</span><span className="text-green-400 font-bold">{cardData.match}</span></div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* CENTER CERTIFICATE ON END */}
+                    <div id="cert-container" className="absolute top-1/2 left-[55%] -translate-y-1/2 -translate-x-1/2 z-30 pointer-auto">
+                        <div className="glass-panel p-8 rounded-3xl w-[400px] border-green-500/40 shadow-[0_30px_80px_rgba(34,197,94,0.3)] bg-green-950/20 backdrop-blur-[40px]">
+                            <div className="text-center mb-6">
+                                <h2 className="text-2xl font-mono font-bold text-green-400 tracking-widest">CERTIFICATE GENERATED</h2>
+                                <p className="text-xs text-green-200/70 mt-2 font-mono uppercase">Blockchain Ledger Immutable Commitment</p>
+                            </div>
+                            
+                            <div className="bg-obsidian border border-green-500/30 rounded-xl p-5 mb-6 flex justify-between items-center">
+                                <div className="font-mono text-[10px] space-y-2 text-gray-300">
+                                    <div><span className="text-gray-500">Claim ID:</span> NWG-9842</div>
+                                    <div><span className="text-gray-500">Type:</span> Rapid Accident Protocol</div>
+                                    <div><span className="text-gray-500">Amount:</span> INR 14,500 Auto-Dispatched</div>
+                                </div>
+                                <div id="qrcode" className="p-2 bg-white rounded"></div>
+                            </div>
+                            
+                            <button onClick={() => window.location.reload()} className="w-full py-3 bg-green-500/20 border border-green-500/50 text-green-400 font-mono text-xs tracking-widest rounded-lg hover:bg-green-500/30 transition-all uppercase">
+                                Finalize & Exit Setup
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('react-root'));
+        root.render(<AeternaApp />);
+    </script>
+</body>
+</html>
