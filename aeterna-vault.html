@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AETERNA VAULT - Zero Input OS</title>
+    <title>AETERNA VAULT - Cognitive Insurance</title>
     
     <!-- React & Babel -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -17,9 +17,9 @@
             theme: {
                 extend: {
                     colors: {
-                        cobalt: '#0A0F1E',
-                        obsidian: '#02040A',
+                        midnight: '#050A1F',
                         gold: '#D4AF37',
+                        glass: 'rgba(5, 10, 31, 0.6)'
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -29,62 +29,10 @@
             }
         }
     </script>
-
-    <!-- Three.js, GSAP & QRCode -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Mono&display=swap');
-        body { margin: 0; overflow: hidden; background: #02040A; color: white; -webkit-font-smoothing: antialiased;}
-        #three-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
-        #react-root { position: relative; z-index: 10; width: 100vw; height: 100vh; pointer-events: none; }
-        .pointer-auto { pointer-events: auto; }
-
-        /* Luxury Glassmorphism */
-        .glass-panel {
-            background: rgba(10, 15, 30, 0.7);
-            backdrop-filter: blur(24px);
-            border: 1px solid rgba(212, 175, 55, 0.15);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 0 30px rgba(212, 175, 55, 0.05);
-        }
-        
-        .hud-scanline {
-            position: absolute; top: 0; left: 0; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--gold), transparent);
-            animation: scan 3s linear infinite; opacity: 0.6; z-index: 50; pointer-events: none;
-        }
-        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
-
-        /* Dynamic Vault States */
-        .vault-alert::after {
-            content:''; position:fixed; inset:0; pointer-events:none; z-index: 99;
-            box-shadow: inset 0 0 150px rgba(239, 68, 68, 0.4);
-            animation: redPulse 0.5s infinite alternate;
-        }
-        @keyframes redPulse { 0% { opacity: 0.5; } 100% { opacity: 1; backdrop-filter: blur(2px); } }
-
-        /* Mic Ring UI over Three.js Canvas */
-        .mic-ring {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 350px; height: 350px; border-radius: 50%;
-            border: 2px solid transparent; z-index: 2; pointer-events: none;
-            transition: 0.3s;
-        }
-        .mic-active-ring {
-            border-color: rgba(212, 175, 55, 0.6);
-            box-shadow: 0 0 60px rgba(212, 175, 55, 0.4), inset 0 0 40px rgba(212, 175, 55, 0.2);
-            animation: micGlow 1.5s infinite alternate;
-        }
-        @keyframes micGlow { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.05); } }
-
-        /* Certificates */
-        #cert-container { opacity: 0; transform: translateY(40px) scale(0.9); transition: all 1s cubic-bezier(0.16, 1, 0.3, 1); }
-        #cert-container.show { opacity: 1; transform: translateY(0) scale(1); }
-    </style>
-
-    <!-- Voiceflow Global AI Agent Injection -->
+    <!-- Voiceflow Injection -->
     <script type="text/javascript">
       (function(d, t) {
           var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
@@ -99,384 +47,347 @@
           v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs"; v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
       })(document, 'script');
     </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Mono&display=swap');
+        body { margin: 0; overflow: hidden; background: #02050f; color: white; -webkit-font-smoothing: antialiased;}
+        
+        .ambient-glow {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 800px; height: 800px;
+            background: radial-gradient(circle, rgba(212,175,55,0.05) 0%, rgba(5,10,31,0) 70%);
+            z-index: 0; pointer-events: none;
+        }
+
+        .glass-panel {
+            background: rgba(10, 15, 40, 0.4);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5), inset 0 0 20px rgba(212, 175, 55, 0.05);
+        }
+
+        /* Center AI Orb */
+        .ai-orb-container {
+            width: 180px; height: 180px; position: relative;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .ai-orb {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #D4AF37, #8a6c1c, #111);
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.4), inset -10px -10px 20px rgba(0,0,0,0.8);
+            animation: breathe 4s ease-in-out infinite alternate;
+        }
+        @keyframes breathe {
+            0% { transform: scale(0.95); box-shadow: 0 0 25px rgba(212,175,55,0.3); }
+            100% { transform: scale(1.05); box-shadow: 0 0 50px rgba(212,175,55,0.6); }
+        }
+        
+        .ai-orb.listening { animation: pulseRapid 0.6s infinite alternate; background: radial-gradient(circle at 30% 30%, #fff, #D4AF37, #111); }
+        @keyframes pulseRapid {
+            0% { transform: scale(1); box-shadow: 0 0 40px rgba(212,175,55,0.6); }
+            100% { transform: scale(1.15); box-shadow: 0 0 80px rgba(255,255,255,0.6); border: 2px solid white; }
+        }
+
+        .orb-rings { position:absolute; width:100%; height:100%; border: 1px solid rgba(212,175,55,0.2); border-radius:50%; animation: spinNode 10s linear infinite; }
+        .orb-rings::before { content:''; position:absolute; width:8px; height:8px; background:var(--gold); border-radius:50%; top:-4px; left:50%; box-shadow: 0 0 10px var(--gold); }
+        @keyframes spinNode { 100% { transform: rotate(360deg); } }
+
+        /* Voice Waveform */
+        .waveform { display: flex; gap: 4px; align-items: center; height: 40px; }
+        .wave-bar { width: 3px; background: var(--gold); border-radius: 4px; height: 4px; transition: height 0.1s ease; }
+        .wave-bar.active { animation: eq 0.6s ease-in-out infinite alternate; }
+        @keyframes eq { 0% { height: 4px; opacity:0.4; } 100% { height: 40px; opacity:1; box-shadow: 0 0 10px var(--gold); } }
+
+        /* Fade Utils */
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+    </style>
 </head>
 <body>
 
-    <div id="three-canvas"></div>
-    <div id="mic-ring-ui" class="mic-ring"></div>
+    <div class="ambient-glow"></div>
     <div id="react-root"></div>
 
-    <!-- Application Execution -->
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // Sound Synthesis (No external files needed)
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        // TTS Audio Context for subtle sounds
         let audioCtx;
-        
-        function initAudio() {
-            if(!audioCtx) audioCtx = new AudioContext();
+        function playBlip() {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if(audioCtx.state === 'suspended') audioCtx.resume();
-        }
-
-        function playThud() {
-            if(!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-            gain.gain.setValueAtTime(1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function playSuccess() {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(600, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
             osc.start(); osc.stop(audioCtx.currentTime + 0.5);
         }
 
-        function playAlert() {
-            if(!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(50, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.2);
-            gain.gain.linearRampToValueAtTime(0.6, audioCtx.currentTime + 0.4);
-            osc.start(); osc.stop(audioCtx.currentTime + 2);
-        }
 
-        /* --- THREE.JS VAULT ENGINE --- */
-        let scene, camera, renderer, vaultGroup, bolts = [];
-        
-        function initThree() {
-            const canvas = document.getElementById('three-canvas');
-            scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x02040A, 0.03);
-
-            camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 100);
-            camera.position.z = 16;
-
-            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            canvas.appendChild(renderer.domElement);
-
-            // Lighting
-            scene.add(new THREE.AmbientLight(0x0A0F1E, 2));
-            const pLight1 = new THREE.PointLight(0xD4AF37, 2, 50); pLight1.position.set(5, 5, 5); scene.add(pLight1);
-            const pLight2 = new THREE.PointLight(0x4466ff, 2, 50); pLight2.position.set(-5, -5, 2); scene.add(pLight2);
-
-            vaultGroup = new THREE.Group();
-            
-            // Vault Body
-            const cylGeo = new THREE.CylinderGeometry(4.5, 4.5, 1, 64);
-            const matDark = new THREE.MeshPhysicalMaterial({ color: 0x02040A, metalness: 0.9, roughness: 0.1, clearcoat: 1.0 });
-            const vaultBody = new THREE.Mesh(cylGeo, matDark);
-            vaultBody.rotation.x = Math.PI / 2;
-            vaultGroup.add(vaultBody);
-
-            // Quantum Ring
-            const tubeGeo = new THREE.TorusGeometry(4.6, 0.15, 16, 100);
-            const matGold = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 1, roughness: 0.2 });
-            const rim = new THREE.Mesh(tubeGeo, matGold);
-            vaultGroup.add(rim);
-            
-            // Core Plate
-            const plateGeo = new THREE.CylinderGeometry(2, 2, 1.2, 32);
-            const plate = new THREE.Mesh(plateGeo, matGold);
-            plate.rotation.x = Math.PI / 2;
-            vaultGroup.add(plate);
-
-            // The 4 Quantum Bolts
-            for(let i=0; i<4; i++) {
-                const bGeo = new THREE.BoxGeometry(0.6, 2.5, 0.6);
-                const bolt = new THREE.Mesh(bGeo, matGold);
-                const angle = (i * Math.PI) / 2;
-                // Start extended (unlocked state logically means extending them OUT to lock into wall, or vice versa. 
-                // Let's say pulling them IN is unlocking.
-                bolt.position.x = Math.cos(angle) * 3;
-                bolt.position.y = Math.sin(angle) * 3;
-                bolt.rotation.z = angle;
-                bolt.userData = { angle: angle, isLocked: false };
-                bolts.push(bolt);
-                vaultGroup.add(bolt);
-            }
-
-            scene.add(vaultGroup);
-
-            // Floating Atmosphere
-            const pGeo = new THREE.BufferGeometry();
-            const pPos = new Float32Array(300 * 3);
-            for(let i=0; i<300*3; i++) { pPos[i] = (Math.random()-0.5)*30; }
-            pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-            const pMat = new THREE.PointsMaterial({ color: 0xD4AF37, size: 0.04, transparent:true, opacity:0.3 });
-            const particles = new THREE.Points(pGeo, pMat);
-            scene.add(particles);
-
-            function animate() {
-                requestAnimationFrame(animate);
-                vaultGroup.rotation.z += 0.001;
-                particles.rotation.y += 0.002;
-                renderer.render(scene, camera);
-            }
-            animate();
-        }
-
-        // Lock Bolt Function (Moves outward to "Lock" into the frame, with thud)
-        function triggerBoltLock(index) {
-            if(!bolts[index]) return;
-            const b = bolts[index];
-            gsap.to(b.position, {
-                x: Math.cos(b.userData.angle) * 4.6,
-                y: Math.sin(b.userData.angle) * 4.6,
-                duration: 0.5,
-                ease: "back.out(1.7)",
-                onComplete: () => playThud()
-            });
-            gsap.to(vaultGroup.scale, { x: 1.02, y: 1.02, z: 1.02, duration: 0.1, yoyo: true, repeat: 1 });
-        }
-
-        function triggerVaultOpen() {
-            // Retract all bolts
-            bolts.forEach(b => {
-                gsap.to(b.position, { x: Math.cos(b.userData.angle)*2, y: Math.sin(b.userData.angle)*2, duration: 1, ease: "power2.inOut" });
-            });
-            setTimeout(() => {
-                gsap.to(vaultGroup.rotation, { y: Math.PI / -2.2, duration: 2.5, ease: "power2.inOut" });
-                gsap.to(vaultGroup.position, { x: 8, z: -8, duration: 2.5, ease: "power2.inOut" });
-                
-                // Show certificate
-                document.getElementById('cert-container').classList.add('show');
-            }, 1000);
-        }
-
-        function triggerRedPulse() {
-            document.body.classList.add('vault-alert');
-            playAlert();
-        }
-
-        /* --- REACT AETERNA APP --- */
         function AeternaApp() {
-            const [layer, setLayer] = useState('idle'); // idle, interacting, fraud, success
-            const [micActive, setMicActive] = useState(false);
-            const [logs, setLogs] = useState(["SYSTEM STANDBY. Click 'Initialize Security Node' to begin."]);
-            const [cardData, setCardData] = useState(null);
+            // Flow States: 0: Init, 1: Understood, 2: Document, 3: Review, 4: Success
+            const [step, setStep] = useState(0); 
+            const [isListening, setIsListening] = useState(false);
+            const [systemText, setSystemText] = useState("I'm here to help. Just tap the microphone and tell me what happened.");
+            
+            // Extracted Data
+            const [data, setData] = useState({
+                type: '-', asset: '-', location: '-', time: '-'
+            });
 
-            useEffect(() => {
-                initThree();
-                window.addEventListener('resize', () => {
-                    camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight);
-                });
-            }, []);
+            // Trust Engine
+            const [trust, setTrust] = useState({
+                identity: 'pending', asset: 'pending', incident: 'pending', risk: 'Calculating...'
+            });
 
-            // Mic visual binding
-            useEffect(() => {
-                const ring = document.getElementById('mic-ring-ui');
-                if(micActive) ring.classList.add('mic-active-ring');
-                else ring.classList.remove('mic-active-ring');
-            }, [micActive]);
+            // Waveform bars
+            const bars = Array.from({length: 20});
 
-            // TTS & STT Web Audio Engine
-            const speakAndListen = (text, expectedAction) => {
-                if(layer === 'fraud') return;
+            // Executive Voice Agent
+            const speak = (txt, onEndCallback = null) => {
+                setSystemText(txt);
+                const utter = new SpeechSynthesisUtterance(txt);
+                utter.pitch = 0.9; utter.rate = 1.05;
+                if(onEndCallback) utter.onend = onEndCallback;
+                window.speechSynthesis.speak(utter);
+            };
+
+            const triggerListen = (expectedIntent) => {
+                // Audio init hack
+                if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 
-                const synth = window.speechSynthesis;
-                synth.cancel();
-                setLogs(p => [...p, `[AGENT]: ${text}`]);
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if(!SpeechRec) return alert("Web Speech Not Supported.");
                 
-                const utter = new SpeechSynthesisUtterance(text);
-                utter.pitch = 0.8; utter.rate = 1.05;
+                setIsListening(true);
+                const sr = new SpeechRec();
+                sr.start();
                 
-                utter.onend = () => {
-                    // Automatically trigger mic when done speaking!
-                    setMicActive(true);
-                    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-                    if(!SpeechRec) { alert("Web Speech API not supported."); return; }
-                    
-                    const recog = new SpeechRec();
-                    recog.start();
-                    recog.onresult = (e) => {
-                        const transcript = e.results[0][0].transcript;
-                        setMicActive(false);
-                        setLogs(p => [...p, `[USER]: "${transcript}"`]);
-                        expectedAction(transcript.toLowerCase());
-                    };
-                    recog.onerror = () => setMicActive(false);
+                sr.onresult = (e) => {
+                    setIsListening(false);
+                    const res = e.results[0][0].transcript.toLowerCase();
+                    processVoice(res, expectedIntent);
                 };
-                synth.speak(utter);
+                sr.onerror = () => setIsListening(false);
             };
 
-            const initiateSequence = () => {
-                initAudio(); // Required to unlock browser audio context
-                setLayer('interacting');
-                speakAndListen(
-                    "Authentication required. State your purpose: Health, Theft, Travel, or Accident.", 
-                    handleDomainResponse
-                );
+            const processVoice = (res, intent) => {
+                if(intent === 'initial') {
+                    if(res.includes('stolen') || res.includes('phone') || res.includes('chandigarh')) {
+                        // AI understands structured data
+                        playBlip();
+                        setData({ type: 'Theft', asset: 'Phone', location: 'Chandigarh', time: 'Yesterday' });
+                        setStep(1);
+                        speak("I have understood your situation. Is this correct?", () => triggerListen('confirm_1'));
+                    } else {
+                        speak("I didn't quite catch that. Could you repeat?", () => triggerListen('initial'));
+                    }
+                }
+                else if(intent === 'confirm_1') {
+                    if(res.includes('yes') || res.includes('confirm') || res.includes('correct')) {
+                        playBlip();
+                        setTrust(p => ({...p, identity: 'verified'}));
+                        speak("Do you have the IMEI or should I securely fetch it directly from your device?", () => triggerListen('fetch'));
+                    } else {
+                       speak("Let's restart. What happened?", () => triggerListen('initial'));
+                    }
+                }
+                else if(intent === 'fetch') {
+                    playSuccess();
+                    setTrust(p => ({...p, asset: 'verified'}));
+                    setStep(2);
+                    speak("Asset verified cryptographically. Now, you can just show me any relevant document, like an F I R, by dragging it here.");
+                }
+                else if(intent === 'final_review') {
+                    if(res.includes('yes') || res.includes('submit')) {
+                        playSuccess();
+                        setStep(4);
+                        speak("Your claim is submitted. The blockchain ledger is now tracking your resolution. I will monitor it for you.");
+                    }
+                }
             };
 
-            const handleDomainResponse = (res) => {
-                if(res.includes('accident') || res.includes('ambala')) {
-                    // Bolt 1: Identity
-                    setTimeout(() => triggerBoltLock(0), 500); 
-                    
-                    setTimeout(() => {
-                        setCardData({ title: "Data Integrity Card", type: "GPS Source Truth", loc: "Ambala, IN", time: "11:56 PM", match: "TRUE" });
-                        speakAndListen(
-                            "I have verified your location as Ambala at 11:56 PM via GPS metadata cross-reference. Is this correct?", 
-                            handleVerificationResponse
-                        );
-                    }, 1500);
-                } 
-                else if(res.includes('delhi')) {
-                   // PREDICTIVE FRAUD TRIGGER
-                   setLayer('fraud');
-                   triggerRedPulse();
-                   setLogs(p => [...p, `[CRITICAL WARNING]: User location mismatch. Device IP resolves to Ambala. Fraud protocol enacted.`]);
-                }
-                else {
-                    speakAndListen("I did not catch that. State Health, Theft, Travel, or Accident.", handleDomainResponse);
-                }
-            };
-
-            const handleVerificationResponse = (res) => {
-                if(res.includes('confirm') || res.includes('yes') || res.includes('correct')) {
-                    // Bolt 2: Data
-                    triggerBoltLock(1);
-                    setLogs(p => [...p, `[SYS]: User confirmation logged. Securing quantum bolts.`]);
-                    
-                    setTimeout(() => {
-                        // Bolt 3: Verification
-                        triggerBoltLock(2);
-                        setLogs(p => [...p, `[SYS]: Metadata Verification Lock engaged.`]);
-                    }, 1200);
-
-                    setTimeout(() => {
-                        // Bolt 4: Payout
-                        triggerBoltLock(3);
-                        setLayer('success');
-                        
-                        const synth = window.speechSynthesis;
-                        const utter = new SpeechSynthesisUtterance("All audits cleared. Central Vault mechanics disengaging. Generating Smart Insurance Certificate.");
-                        utter.pitch=0.8; synth.speak(utter);
-
-                        triggerVaultOpen();
-                        
-                        // Generate QR dynamically
-                        setTimeout(() => {
-                            document.getElementById('qrcode').innerHTML = "";
-                            new QRCode(document.getElementById("qrcode"), { text: "NWG-9842: SMART CERTIFICATE VERIFIED", width: 100, height: 100, colorDark: "#000", colorLight: "#fff" });
-                        }, 2500);
-
-                    }, 2400);
-                } else {
-                    setLayer('fraud');
-                    triggerRedPulse();
-                    setLogs(p => [...p, `[CRITICAL WARNING]: Manual validation failed. Fraud monitoring alerted.`]);
-                }
+            const handleDocumentDrop = () => {
+                playBlip();
+                setTrust(p => ({...p, incident: 'verified', risk: 'Low'}));
+                setStep(3);
+                speak("Document ingested and verified. Please review the final claim before I submit to the ledger.", () => triggerListen('final_review'));
             };
 
             return (
-                <div className="w-full h-full p-8 flex flex-col justify-between pointer-events-none">
-                    <div className="hud-scanline"></div>
+                <div className="w-full h-screen p-8 flex flex-col z-10 relative">
                     
-                    {/* TOP HUD ROW */}
-                    <div className="flex justify-between items-start z-20 pointer-auto">
-                        <div>
-                            <h1 className="text-3xl font-mono font-bold tracking-widest text-gold drop-shadow-[0_0_15px_rgba(212,175,55,0.8)]">AETERNA</h1>
-                            <p className="font-mono text-[10px] text-gray-400 mt-1 tracking-widest uppercase">Zero-Input Terminal</p>
+                    {/* Header */}
+                    <header className="flex justify-between items-center mb-10">
+                        <div className="font-mono text-gold text-2xl tracking-widest font-bold drop-shadow-[0_0_10px_rgba(212,175,55,0.6)]">
+                            AETERNA VAULT
                         </div>
+                        <div className="text-gray-400 font-mono text-[10px] tracking-widest uppercase border border-gray-600/30 px-4 py-2 rounded-full backdrop-blur-md">
+                            Live Cognitive Session
+                        </div>
+                    </header>
+
+                    {/* MAIN LAYOUT */}
+                    <div className="flex-1 flex justify-between items-stretch">
                         
-                        <div className="flex gap-4">
-                            <div className="glass-panel px-4 py-3 rounded-xl flex flex-col items-center justify-center">
-                                <span className="font-mono text-[9px] text-gray-400 uppercase mb-1">Trust Score</span>
-                                <span className={`font-mono text-lg font-bold ${layer==='fraud' ? 'text-red-500' : 'text-green-400'}`}>
-                                    {layer==='fraud' ? '08' : '99'}
-                                </span>
-                            </div>
-                            <div className="glass-panel px-5 py-3 rounded-xl flex flex-col gap-1">
-                                <span className="font-mono text-[9px] text-gray-400 uppercase">System Status</span>
-                                <div className="flex items-center gap-2">
-                                    <div className={`w-2 h-2 rounded-full ${layer === 'fraud' ? 'bg-red-500 shadow-[0_0_8px_#ef4444]' : 'bg-green-400 shadow-[0_0_8px_#4ade80]'}`}></div>
-                                    <span className="font-mono text-xs text-white">API LINKED</span>
-                                </div>
-                            </div>
-                            <div className="glass-panel px-5 py-3 rounded-xl flex flex-col gap-1 border border-red-500/30">
-                                <span className="font-mono text-[9px] text-red-400 uppercase">Live Fraud Monitoring</span>
-                                <span className="font-mono text-xs text-white uppercase">{layer === 'fraud' ? 'BREACH DETECTED' : 'ACTIVE GUARD'}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* MIDDLE LEFT: Dialog & Card */}
-                    <div className="flex justify-between items-center z-20 pointer-auto">
-                        <div className="w-[380px] flex flex-col gap-6">
+                        {/* LEFT PANEL: Understanding */}
+                        <div className="w-80 flex flex-col gap-4">
+                            <h2 className="font-sans text-sm font-semibold text-gray-300 uppercase tracking-wider mb-2">Understanding Your Situation</h2>
                             
-                            {/* Terminal Window */}
-                            <div className="glass-panel p-5 rounded-2xl h-[300px] flex flex-col">
-                                <div className="text-gold text-xs font-mono uppercase tracking-widest border-b border-gold/20 pb-2 mb-3">Terminal Logs</div>
-                                <div className="font-mono text-[11px] text-gray-300 flex-1 overflow-y-auto flex flex-col gap-2">
-                                    {logs.map((L, i) => (
-                                        <div key={i} className={`p-2 rounded ${L.startsWith('[USER]') ? 'bg-white/5 border border-white/10' : (L.includes('WARNING') ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 'bg-gold/10 text-gold border border-gold/20')}`}>
-                                            {L}
+                            <div className="glass-panel rounded-2xl p-6 flex flex-col gap-4">
+                                <DataField label="Event Type" value={data.type} icon="⚠" />
+                                <DataField label="Asset" value={data.asset} icon="📱" />
+                                <DataField label="Location" value={data.location} icon="📍" />
+                                <DataField label="Time Frame" value={data.time} icon="⏳" />
+                            </div>
+
+                            {/* Dynamic Action Block */}
+                            {step === 2 && (
+                                <div className="glass-panel border-dashed border-2 p-8 text-center rounded-2xl mt-4 cursor-pointer hover:bg-white/5 transition fade-in" onClick={handleDocumentDrop}>
+                                    <div className="text-3xl mb-3">📄</div>
+                                    <h3 className="font-sans text-[13px] font-semibold text-gold mb-1">Visual Ingestion</h3>
+                                    <p className="text-gray-400 text-[11px] font-mono">Click or Drag Document (FIR)</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* CENTER PANEL: Conversational Core */}
+                        <div className="flex-1 flex flex-col items-center justify-center -mt-20">
+                            
+                            {/* The Orb */}
+                            <div className="ai-orb-container mb-12 cursor-pointer" onClick={() => step===0 ? triggerListen('initial') : null}>
+                                <div className={`orb-rings ${isListening ? 'animate-pulse' : ''}`}></div>
+                                <div className={`ai-orb ${isListening ? 'listening' : ''}`}></div>
+                            </div>
+
+                            {/* System Text Overlay */}
+                            <div className="max-w-md text-center h-24 flex items-center justify-center">
+                                <h1 className="font-sans text-2xl font-light text-white leading-relaxed drop-shadow-md">
+                                    "{systemText}"
+                                </h1>
+                            </div>
+
+                            {/* Floating Context Cards */}
+                            {step === 1 && (
+                                <div className="glass-panel p-6 rounded-2xl w-80 mt-8 text-center fade-in border-gold/50">
+                                    <p className="font-mono text-xs text-gray-400 uppercase mb-4">I understood this:</p>
+                                    <div className="font-sans text-sm font-medium mb-6 space-y-2 text-left bg-black/20 p-4 rounded-xl">
+                                        <div><span className="text-gray-500 mr-2">Loss:</span> {data.asset}</div>
+                                        <div><span className="text-gray-500 mr-2">Where:</span> {data.location}</div>
+                                        <div><span className="text-gray-500 mr-2">When:</span> {data.time}</div>
+                                    </div>
+                                    <div className="flex justify-center gap-4 text-xs font-mono">
+                                        <div className="px-4 py-2 bg-gold/20 text-gold rounded-full border border-gold/30">✔ Confirm</div>
+                                        <div className="px-4 py-2 border border-white/10 text-gray-300 rounded-full">✏ Adjust</div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Review Screen */}
+                            {step === 3 && (
+                                <div className="glass-panel p-8 rounded-2xl w-96 mt-8 fade-in border-gold/50 shadow-[0_0_50px_rgba(212,175,55,0.15)]">
+                                    <p className="font-sans text-lg text-gold font-medium mb-6 text-center">Here is your claim summary:</p>
+                                    <div className="space-y-4 font-mono text-xs mb-8">
+                                        <div className="flex justify-between border-b border-white/10 pb-2"><span className="text-gray-500">Asset</span><span>{data.asset}</span></div>
+                                        <div className="flex justify-between border-b border-white/10 pb-2"><span className="text-gray-500">Event</span><span>{data.type}</span></div>
+                                        <div className="flex justify-between border-b border-white/10 pb-2"><span className="text-gray-500">Location</span><span>{data.location}</span></div>
+                                        <div className="flex justify-between"><span className="text-gray-500">Proofs</span><span className="text-green-400">FIR.pdf, Telemetry</span></div>
+                                    </div>
+                                    <button onClick={() => processVoice('submit', 'final_review')} className="w-full py-4 bg-gold text-black font-semibold tracking-wider font-sans rounded-xl hover:bg-yellow-400 transition-colors shadow-[0_0_20px_rgba(212,175,55,0.4)]">
+                                        SUBMIT CLAIM
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Success Screen */}
+                            {step === 4 && (
+                                <div className="text-center mt-12 fade-in">
+                                    <div className="w-20 h-20 bg-green-500/20 border-2 border-green-400 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-[0_0_40px_rgba(34,197,94,0.4)] text-green-400">✓</div>
+                                    <h2 className="text-xl font-mono text-green-400 tracking-widest uppercase">Resolution Active</h2>
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* RIGHT PANEL: Live Trust Engine */}
+                        <div className="w-80 flex flex-col gap-4">
+                            <h2 className="font-sans text-sm font-semibold text-gray-300 uppercase tracking-wider mb-2 text-right">Live Trust Engine</h2>
+                            
+                            <div className="glass-panel rounded-2xl p-6">
+                                <div className="space-y-6">
+                                    <VerificationRow label="Identity Verified" status={trust.identity} />
+                                    <VerificationRow label="Asset Authenticated" status={trust.asset} />
+                                    <VerificationRow label="Incident Validated" status={trust.incident} />
+                                    
+                                    <div className="pt-6 border-t border-white/10 mt-6">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="font-sans text-xs text-gray-400">Dynamic Fraud Risk</span>
+                                            <span className={`font-mono text-xs font-bold ${trust.risk === 'Low' ? 'text-green-400' : 'text-gold'}`}>{trust.risk}</span>
                                         </div>
-                                    ))}
+                                        <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                                            <div className={`h-full ${trust.risk==='Low'?'w-12 bg-green-400':'w-full bg-gold/50 animate-pulse'}`}></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Initiation Button */}
-                            {layer === 'idle' && (
-                                <button onClick={initiateSequence} className="glass-panel p-4 rounded-xl font-mono text-xs text-gold uppercase tracking-widest hover:bg-gold/10 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all">
-                                    Initialize Security Node
-                                </button>
-                            )}
-
-                        </div>
-
-                        {/* Mid Right: Verification Card popping in */}
-                        <div className="w-[300px]">
-                            {cardData && layer !== 'fraud' && layer !== 'success' && (
-                                <div className="glass-panel p-6 rounded-2xl animate-[slideIn_0.5s_ease-out]">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h3 className="font-mono text-xs text-gold uppercase tracking-widest">{cardData.title}</h3>
-                                        <span className="animate-pulse w-2 h-2 bg-gold rounded-full"></span>
-                                    </div>
-                                    <div className="space-y-3 font-mono text-[11px]">
-                                        <div className="flex justify-between border-b border-white/5 pb-2"><span className="text-gray-500">Source</span><span className="text-white">{cardData.type}</span></div>
-                                        <div className="flex justify-between border-b border-white/5 pb-2"><span className="text-gray-500">Node Loc</span><span className="text-white">{cardData.loc}</span></div>
-                                        <div className="flex justify-between border-b border-white/5 pb-2"><span className="text-gray-500">Timestamp</span><span className="text-white text-right">{cardData.time}</span></div>
-                                        <div className="flex justify-between pt-1"><span className="text-gray-500">Match Integrity</span><span className="text-green-400 font-bold">{cardData.match}</span></div>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </div>
 
-                    {/* CENTER CERTIFICATE ON END */}
-                    <div id="cert-container" className="absolute top-1/2 left-[55%] -translate-y-1/2 -translate-x-1/2 z-30 pointer-auto">
-                        <div className="glass-panel p-8 rounded-3xl w-[400px] border-green-500/40 shadow-[0_30px_80px_rgba(34,197,94,0.3)] bg-green-950/20 backdrop-blur-[40px]">
-                            <div className="text-center mb-6">
-                                <h2 className="text-2xl font-mono font-bold text-green-400 tracking-widest">CERTIFICATE GENERATED</h2>
-                                <p className="text-xs text-green-200/70 mt-2 font-mono uppercase">Blockchain Ledger Immutable Commitment</p>
-                            </div>
-                            
-                            <div className="bg-obsidian border border-green-500/30 rounded-xl p-5 mb-6 flex justify-between items-center">
-                                <div className="font-mono text-[10px] space-y-2 text-gray-300">
-                                    <div><span className="text-gray-500">Claim ID:</span> NWG-9842</div>
-                                    <div><span className="text-gray-500">Type:</span> Rapid Accident Protocol</div>
-                                    <div><span className="text-gray-500">Amount:</span> INR 14,500 Auto-Dispatched</div>
-                                </div>
-                                <div id="qrcode" className="p-2 bg-white rounded"></div>
-                            </div>
-                            
-                            <button onClick={() => window.location.reload()} className="w-full py-3 bg-green-500/20 border border-green-500/50 text-green-400 font-mono text-xs tracking-widest rounded-lg hover:bg-green-500/30 transition-all uppercase">
-                                Finalize & Exit Setup
-                            </button>
+                    {/* Footer Waveform */}
+                    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3">
+                        <div className="waveform">
+                            {bars.map((_, i) => (
+                                <div key={i} className={`wave-bar ${isListening ? 'active' : ''}`} style={{animationDelay: `${Math.random()}s`}}></div>
+                            ))}
                         </div>
+                        <span className="font-mono text-[9px] tracking-widest text-gray-500 uppercase">
+                            {isListening ? 'SECURE ACOUSTIC CHANNEL OPEN' : 'SYSTEM AWAITING INPUT'}
+                        </span>
                     </div>
 
                 </div>
             );
+        }
+
+        // Mini Components
+        function DataField({label, value, icon}) {
+            return (
+                <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex justify-center items-center text-lg">{icon}</div>
+                    <div>
+                        <div className="font-mono text-[9px] uppercase tracking-widest text-gray-500 mb-1">{label}</div>
+                        <div className={`font-sans text-sm font-medium ${value === '-' ? 'text-gray-700' : 'text-white'}`}>{value}</div>
+                    </div>
+                </div>
+            );
+        }
+
+        function VerificationRow({label, status}) {
+            return (
+                <div className="flex justify-between items-center">
+                    <span className="font-sans text-[13px] text-gray-300">{label}</span>
+                    <span className="text-lg">
+                        {status === 'pending' ? <span className="text-gray-600 opacity-50 block animate-spin">◒</span> : 
+                         status === 'verified' ? <span className="text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]">✅</span> : ''}
+                    </span>
+                </div>
+            )
         }
 
         const root = ReactDOM.createRoot(document.getElementById('react-root'));
