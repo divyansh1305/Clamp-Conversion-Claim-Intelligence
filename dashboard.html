@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- Annyang for Hands-Free Voice Commands -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
+    <script src="global-voice.js"></script>
 
     <style>
         :root {
@@ -312,6 +315,37 @@
             setTimeout(() => {
                 runVoiceBot("Please tell me your insurance type: Motor, Health, or Travel.");
             }, 800);
+            
+            // --- HANDS-FREE AUTOPILOT (ANNYANG) ---
+            if (typeof annyang !== 'undefined') {
+                const commands = {
+                    '(select) motor': () => {
+                        if (currentView === 'v-0') simulateVoiceChoice('Motor Insurance Selected. Modulating systems.', startStep2);
+                    },
+                    '(select) health': () => {
+                        if (currentView === 'v-0') runVoiceBot('Health Insurance locked for this demo.');
+                    },
+                    '(select) travel': () => {
+                        if (currentView === 'v-0') runVoiceBot('Travel Insurance locked for this demo.');
+                    },
+                    'start recording': () => {
+                        if (currentView === 'v-1') handleMicClick();
+                    },
+                    'yes (this is correct)': () => {
+                        if (currentView === 'v-2') simulateVoiceChoice('Validation confirmed. Initiating document upload sequence.', startStep4);
+                    },
+                    'confirm': () => {
+                        if (currentView === 'v-2') simulateVoiceChoice('Validation confirmed. Initiating document upload sequence.', startStep4);
+                    },
+                    'finish (and terminate)': () => {
+                        if (currentView === 'v-4') simulateVoiceChoice('Terminal disconnected. Have a safe day.', () => { location.reload() });
+                    }
+                };
+                
+                annyang.addCommands(commands);
+                annyang.start({ autoRestart: true, continuous: false });
+                console.log("Hands-Free Mode Active. Annyang is listening...");
+            }
         };
 
         function startStep2() {
