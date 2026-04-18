@@ -4,97 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clamp - Voice-First Insurance Claim</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <style>
         :root {
-            --bg-color: #050505;
+            --bg-color: #050507;
             --primary: #ffffff;
-            --accent: #5577cc;
-            --glass: rgba(15, 15, 15, 0.6);
+            --accent: #00f0ff;
+            --accent-alt: #8a2be2;
+            --glass: rgba(10, 14, 23, 0.45);
             --border: rgba(255, 255, 255, 0.08);
-            --danger: #ff4444;
-            --success: #00cc66;
-            --warning: #ffbb00;
-            --font-main: 'Space Grotesk', sans-serif;
+            --danger: #ff0055;
+            --success: #00ff9d;
+            --warning: #ffb800;
+            --font-main: 'Outfit', sans-serif;
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        body { background-color: var(--bg-color); color: var(--primary); font-family: var(--font-main); overflow: hidden; height: 100vh; display: flex; justify-content: center; align-items: center; perspective: 1000px; }
+        body { background-color: var(--bg-color); color: var(--primary); font-family: var(--font-main); overflow: hidden; height: 100vh; display: flex; justify-content: center; align-items: center; perspective: 1000px; -webkit-font-smoothing: antialiased;}
 
-        #canvas-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; }
+        #canvas-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; filter: blur(1px) opacity(0.8); }
 
         .scanline { position: fixed; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(to right, transparent, var(--accent), transparent); opacity: 0.3; z-index: 999; animation: scanline 4s linear infinite; pointer-events: none; }
         @keyframes scanline { 0% { top: -10px; } 100% { top: 100vh; } }
 
         .top-bar { position: fixed; top: 0; left: 0; width: 100%; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
-        .brand { font-weight: 700; letter-spacing: 2px; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
-        .brand span { width: 8px; height: 8px; background-color: var(--accent); border-radius: 50%; display: inline-block; box-shadow: 0 0 10px var(--accent); animation: pulseBlock 2s infinite alternate; }
-        @keyframes pulseBlock { 0% { opacity:0.5; } 100% { opacity:1; } }
+        .brand { font-weight: 700; letter-spacing: 2px; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; text-transform: uppercase; }
+        .brand i { color: var(--accent); filter: drop-shadow(0 0 8px var(--accent)); }
 
         #master-container { position: relative; z-index: 10; width: 100%; max-width: 850px; height: 600px; display: flex; justify-content: center; align-items: center; }
 
-        .view-panel { position: absolute; width: 100%; background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 24px; padding: 50px 60px; opacity: 0; visibility: hidden; transform: scale(0.95); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 30px 60px rgba(0,0,0,0.5); pointer-events: none; }
+        .view-panel { position: absolute; width: 100%; max-width: 700px; background: var(--glass); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); border: 1px solid var(--border); border-radius: 28px; padding: 50px 60px; opacity: 0; visibility: hidden; transform: scale(0.95); transition: all 0.5s var(--ease); box-shadow: 0 40px 80px rgba(0,0,0,0.6); pointer-events: none; display: flex; flex-direction: column; align-items: center; }
         .view-panel.active { opacity: 1; visibility: visible; transform: scale(1); pointer-events: auto; }
 
-        h1 { font-size: 2.2rem; font-weight: 500; margin-bottom: 10px; letter-spacing: -1px; text-align:center;}
-        p { color: rgba(255,255,255,0.6); font-size: 1.1rem; line-height: 1.6; margin-bottom: 30px; text-align:center;}
+        h1 { font-size: 2.2rem; font-weight: 600; margin-bottom: 10px; letter-spacing: -1px; text-align:center;}
+        p { color: #8b92a5; font-size: 1.1rem; line-height: 1.6; margin-bottom: 30px; text-align:center; font-weight: 400; }
 
-        .btn-group { display: flex; gap: 20px; flex-wrap: wrap; justify-content:center;}
-        button { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff; padding: 18px 36px; border-radius: 12px; font-family: var(--font-main); font-size: 1.1rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease; backdrop-filter: blur(5px); }
-        button:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
-        button.primary { background: #fff; color: #000; box-shadow: 0 0 20px rgba(255,255,255,0.2); width:100%;}
-        button.primary:hover { background: #eee; transform: translateY(-2px); box-shadow: 0 5px 30px rgba(255,255,255,0.4); }
+        .btn-group { display: flex; gap: 20px; flex-wrap: wrap; justify-content:center; width: 100%;}
+        button { background: rgba(0, 240, 255, 0.05); border: 1px solid var(--accent); color: var(--accent); padding: 18px 36px; border-radius: 12px; font-family: var(--font-main); font-size: 1.1rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease; backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; gap: 10px; }
+        button:hover { background: var(--accent); color: #000; transform: translateY(-2px); box-shadow: 0 0 20px rgba(0, 240, 255, 0.4); }
+        button.primary { background: rgba(0, 240, 255, 0.1); width:100%; justify-content: center;}
+        button.primary:hover { background: var(--accent); color: #000; box-shadow: 0 5px 30px rgba(0, 240, 255, 0.4); }
 
         /* Mic Button UI (Step 2) */
         .mic-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 160px; }
-        .mic-btn { width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 2px solid var(--border); display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; position: relative; }
-        .mic-btn svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 2; transition: 0.3s; }
-        .mic-btn:hover { background: rgba(255,255,255,0.1); transform: scale(1.05); }
-        .mic-btn.recording { border-color: var(--danger); background: rgba(255, 68, 68, 0.1); animation: pulseMic 1.5s infinite; }
-        .mic-btn.recording svg { stroke: var(--danger); }
+        .mic-btn { width: 100px; height: 100px; border-radius: 50%; background: var(--bg-color); border: 1px solid var(--border); display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.4s var(--ease); position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.5); font-size: 2.2rem; color: var(--primary); }
+        .mic-btn:hover { background: rgba(255,255,255,0.05); transform: scale(1.05); }
+        .mic-btn.recording { border-color: var(--danger); background: var(--primary); color: var(--danger); box-shadow: 0 0 30px rgba(255, 0, 85, 0.5); animation: pulseMic 1.5s infinite alternate; }
         
         @keyframes pulseMic {
-            0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.6); }
-            70% { box-shadow: 0 0 0 40px rgba(255, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+            0% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 0, 85, 0.4); }
+            100% { transform: scale(1.1); box-shadow: 0 0 40px rgba(255, 0, 85, 0.8); }
         }
 
-        .wave-container { display: flex; gap: 5px; height: 40px; align-items: center; justify-content:center; opacity: 0; transition: 0.3s; margin-top:10px;}
+        .wave-container { display: flex; gap: 6px; height: 40px; align-items: center; justify-content:center; opacity: 0; transition: 0.3s; margin-top:20px;}
         .wave-container.active { opacity: 1; }
         .bar { width: 4px; background: var(--danger); border-radius: 2px; transition: height 0.1s ease; }
 
-        .transcript-box { background: transparent; padding: 0; min-height: 80px; font-size: 1.5rem; text-align:center; line-height: 1.6; color: #fff; margin-bottom:0;}
+        .transcript-box { background: transparent; padding: 0; min-height: 80px; font-size: 1.3rem; text-align:center; line-height: 1.6; color: #fff; margin-bottom:0; font-weight: 300;}
         .cursor-blink { display:inline-block; width:8px; height:24px; background:var(--accent); animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 5px; }
         @keyframes blink { 50% { opacity: 0; } }
 
         /* Data Grid Form (Step 3 Pop) */
-        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; text-align:left;}
-        .data-field { background: rgba(0,0,0,0.5); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
-        .data-label { font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; width: 100%;}
+        .data-field { background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); text-align:left; }
+        .data-label { font-size: 0.8rem; color: #8b92a5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;}
         .data-value { font-size: 1.1rem; font-weight: 500; color:var(--accent);}
 
         /* Document Vault Layout (Step 4 & 5) */
-        .doc-section { display: flex; flex-direction:column; gap:10px; flex: 1; overflow-y: auto; padding-right: 5px; height:320px;}
-        .doc-section::-webkit-scrollbar { width: 4px; } .doc-section::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .vault-container { width: 100%; display: flex; flex-direction: column; gap: 10px; height: 350px; overflow-y: auto; padding-right: 10px;}
+        .vault-container::-webkit-scrollbar { width: 4px; } .vault-container::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.3); border-radius: 10px; }
         
-        .doc-header { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); margin: 5px 0; padding-bottom: 5px; border-bottom:1px solid rgba(255,255,255,0.1); text-align:left;}
+        .doc-item { position: relative; display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); padding: 16px; border-radius: 14px; transition: all 0.4s ease; text-align:left; overflow: hidden; cursor: pointer; }
+        .doc-item:hover { background: rgba(0, 240, 255, 0.05); border-color: rgba(0, 240, 255, 0.3); transform: translateY(-2px); }
+        .doc-info { display: flex; align-items: center; gap: 1rem; z-index: 2; pointer-events: none;}
+        .doc-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; font-size: 1.2rem; color: rgba(255,255,255,0.7); }
+        .doc-details h5 { font-size: 1rem; font-weight: 500; margin-bottom: 4px; color: #fff;}
+        .doc-details p { font-size: 0.85rem; color: #8b92a5; }
         
-        .doc-item { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); padding: 14px; border-radius: 12px; transition: all 0.4s ease; text-align:left;}
-        .doc-info { display: flex; align-items: center; gap: 1rem; }
-        .doc-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; font-size: 1.2rem; color: rgba(255,255,255,0.7); }
-        .doc-details h5 { font-size: 0.95rem; font-weight: 500; margin-bottom: 2px; }
-        .doc-details p { font-size: 0.8rem; color: rgba(255,255,255,0.5); }
-        .conditional-badge { font-size: 0.7rem; background: rgba(255, 187, 0, 0.1); color: var(--warning); padding: 3px 8px; border-radius: 10px; border: 1px solid rgba(255, 187, 0, 0.2); margin-left: 8px;}
+        .upload-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; }
+        .status-icon { z-index: 2; font-size: 1.2rem; color: rgba(255,255,255,0.3); transition: 0.3s; }
 
-        .doc-item.done { border-color: rgba(0, 204, 102, 0.4); background: rgba(0, 204, 102, 0.05); }
-        .doc-item.done .doc-icon { color: var(--success); }
+        .doc-item.done { border-color: rgba(0, 255, 157, 0.4); background: rgba(0, 255, 157, 0.05); cursor: default; }
+        .doc-item.done:hover { transform: none; background: rgba(0, 255, 157, 0.05); }
+        .doc-item.done .doc-icon { color: var(--success); background: rgba(0, 255, 157, 0.1); }
+        .doc-item.done .status-icon { color: var(--success); }
 
-        .succ-icon { width: 80px; height: 80px; background: rgba(0,204,102,0.1); border: 2px solid var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px auto; color: var(--success); font-size: 2rem; }
-        .hidden { display: none !important; }
+        .succ-icon { width: 90px; height: 90px; background: rgba(0, 255, 157, 0.1); border: 2px solid var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px auto; color: var(--success); font-size: 2.5rem; filter: drop-shadow(0 0 20px rgba(0, 255, 157, 0.4));}
+        
     </style>
 </head>
 <body>
@@ -102,30 +104,32 @@
     <div class="scanline"></div>
     <div id="canvas-bg"></div>
     <div class="top-bar">
-        <div class="brand"><span></span> CLAMP</div>
+        <div class="brand"><i class="fa-solid fa-infinity"></i> CLAMP AI</div>
     </div>
 
     <div id="master-container">
 
         <!-- STEP 1: ASK INSURANCE TYPE -->
         <div class="view-panel active" id="v-0">
+            <i class="fa-solid fa-microchip" style="font-size:3rem; color:var(--accent); margin-bottom:20px; filter: drop-shadow(0 0 15px var(--accent));"></i>
             <h1 style="color:var(--accent);">Initiating Intelligence</h1>
-            <p>Please tell me your insurance type: Motor, Health, or Travel.</p>
-            <div class="btn-group" style="margin-top:40px;">
-                <button onclick="startStep2()" style="flex:1;">Motor Insurance</button>
-                <button onclick="alert('Locked')" style="flex:1;">Health</button>
-                <button onclick="alert('Locked')" style="flex:1;">Travel</button>
+            <p>Please establish the protocol: Motor, Health, or Travel.</p>
+            <div class="btn-group" style="margin-top:30px;">
+                <button onclick="simulateVoiceChoice('Motor Insurance Selected. Modulating systems.', startStep2)" style="flex:1;"><i class="fa-solid fa-car"></i> Motor</button>
+                <button onclick="runVoiceBot('Health Insurance locked for this demo.')" style="flex:1;"><i class="fa-solid fa-heart-pulse"></i> Health</button>
+                <button onclick="runVoiceBot('Travel Insurance locked for this demo.')" style="flex:1;"><i class="fa-solid fa-plane"></i> Travel</button>
             </div>
         </div>
 
         <!-- STEP 2: INCIDENT DICTATION -->
         <div class="view-panel" id="v-1">
+            <i class="fa-solid fa-tower-broadcast" style="font-size:3rem; color:var(--accent); margin-bottom:20px; filter: drop-shadow(0 0 15px var(--accent));"></i>
             <h1>Claim Registration</h1>
             <p style="color:var(--accent)">Please describe what happened, including time, location, vehicle, and damage.</p>
             
             <div class="mic-container">
                 <div class="mic-btn" id="core-mic" onclick="handleMicClick()">
-                    <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+                    <i class="fa-solid fa-microphone"></i>
                 </div>
             </div>
 
@@ -140,50 +144,80 @@
 
         <!-- STEP 3: VISUAL SUMMARY (HARDCODED) -->
         <div class="view-panel" id="v-2">
+            <i class="fa-solid fa-check-double" style="font-size:3rem; color:var(--success); margin-bottom:20px;"></i>
             <h1 style="color:var(--success);">Data Extracted</h1>
-            <p>I have structured your narrative. Is this correct?</p>
+            <p>I have structured your narrative. Please verify the automated extraction.</p>
             
             <div class="data-grid">
-                <div class="data-field"><div class="data-label">Time</div><div class="data-value">3:30 PM</div></div>
-                <div class="data-field"><div class="data-label">Location</div><div class="data-value">Elante Mall</div></div>
-                <div class="data-field"><div class="data-label">Vehicle</div><div class="data-value">Hyundai Creta</div></div>
-                <div class="data-field"><div class="data-label">Damage</div><div class="data-value">Bumper & Headlight</div></div>
-                <div class="data-field" style="grid-column: span 2;"><div class="data-label">Third-party Involvement</div><div class="data-value" style="color:var(--danger)">Yes (Truck)</div></div>
+                <div class="data-field"><div class="data-label"><i class="fa-regular fa-clock"></i> Time</div><div class="data-value">3:30 PM</div></div>
+                <div class="data-field"><div class="data-label"><i class="fa-solid fa-location-dot"></i> Location</div><div class="data-value">Elante Mall</div></div>
+                <div class="data-field"><div class="data-label"><i class="fa-solid fa-car"></i> Vehicle</div><div class="data-value">Hyundai Creta</div></div>
+                <div class="data-field"><div class="data-label"><i class="fa-solid fa-burst"></i> Damage</div><div class="data-value">Bumper & Headlight</div></div>
+                <div class="data-field" style="grid-column: span 2;"><div class="data-label"><i class="fa-solid fa-truck-fast"></i> Third-party Involvement</div><div class="data-value" style="color:var(--danger)">Yes (Truck)</div></div>
             </div>
             
             <div class="btn-group">
-                <button class="primary" onclick="startStep4()">Yes, this is correct</button>
+                <button class="primary" onclick="simulateVoiceChoice('Validation confirmed. Initiating document upload sequence.', startStep4)">Yes, this is correct</button>
             </div>
         </div>
 
-        <!-- STEP 4 & 5: DOCUMENT UPLOADS -->
+        <!-- STEP 4: DOCUMENT UPLOADS -->
         <div class="view-panel" id="v-3" style="padding: 40px 60px;">
-            <h1>Upload Vault</h1>
-            <p id="vault-sub">Awaiting your documents...</p>
+            <i class="fa-solid fa-vault" style="font-size:3rem; color:var(--accent); margin-bottom:10px; filter: drop-shadow(0 0 15px var(--accent));"></i>
+            <h1>Secure Upload Vault</h1>
+            <p id="vault-sub">Please upload the required evidence. Voice Intelligence is active.</p>
             
-            <div class="doc-section">
-                <div class="doc-header">REQUIRED</div>
-                <div class="doc-item" id="d-photos"><div class="doc-info"><div class="doc-icon">📸</div><div class="doc-details"><h5>Vehicle Damage Photos</h5><p>Extracting visual proof...</p></div></div></div>
-                <div class="doc-item" id="d-dl"><div class="doc-info"><div class="doc-icon">🪪</div><div class="doc-details"><h5>Driving License (DL)</h5><p>National ID verification</p></div></div></div>
-                <div class="doc-item" id="d-rc"><div class="doc-info"><div class="doc-icon">🚗</div><div class="doc-details"><h5>RC (Registration)</h5><p>Ownership Proof</p></div></div></div>
+            <div class="vault-container">
+                <div class="doc-item" id="d-dl">
+                    <input type="file" class="upload-input" onchange="handleUpload('d-dl', 'Driving License logged. Identity mapped.')">
+                    <div class="doc-info"><div class="doc-icon"><i class="fa-solid fa-id-card"></i></div><div class="doc-details"><h5>Driving License (DL)</h5><p>National ID verification</p></div></div>
+                    <div class="status-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                </div>
                 
-                <div class="doc-header" style="margin-top:10px;">OPTIONAL</div>
-                <div class="doc-item" id="d-fir"><div class="doc-info"><div class="doc-icon">🚔</div><div class="doc-details"><h5>FIR Copy (Police Report)<span class="conditional-badge">If major accident</span></h5><p>Optional verification</p></div></div></div>
-                <div class="doc-item" id="d-estimate"><div class="doc-info"><div class="doc-icon">📄</div><div class="doc-details"><h5>Repair Estimate / Bill</h5><p>Upload from garage</p></div></div></div>
+                <div class="doc-item" id="d-rc">
+                    <input type="file" class="upload-input" onchange="handleUpload('d-rc', 'R. C. Registration confirmed. Ownership verified.')">
+                    <div class="doc-info"><div class="doc-icon"><i class="fa-solid fa-car-side"></i></div><div class="doc-details"><h5>RC (Registration)</h5><p>Vehicle ownership proof</p></div></div>
+                    <div class="status-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                </div>
+
+                <div class="doc-item" id="d-cert">
+                    <input type="file" class="upload-input" onchange="handleUpload('d-cert', 'Insurance Certificate validated.')">
+                    <div class="doc-info"><div class="doc-icon"><i class="fa-solid fa-file-shield"></i></div><div class="doc-details"><h5>Insurance Certificate</h5><p>Policy coverage validation</p></div></div>
+                    <div class="status-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                </div>
                 
-                <div class="doc-header" style="margin-top:10px;">LATER STAGE</div>
-                <div class="doc-item" style="opacity: 0.4;"><div class="doc-info"><div class="doc-icon">🧾</div><div class="doc-details"><h5>Final bill</h5><p>Submit after repair completion</p></div></div></div>
+                <div class="doc-item" id="d-photos">
+                    <input type="file" class="upload-input" onchange="handleUpload('d-photos', 'Vehicle Damage Photos ingested. Running A I computer vision analysis.')" multiple>
+                    <div class="doc-info"><div class="doc-icon"><i class="fa-solid fa-camera"></i></div><div class="doc-details"><h5>Damage Photos</h5><p>Exterior impact evidence</p></div></div>
+                    <div class="status-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                </div>
+
+                <div class="doc-item" id="d-fir">
+                    <input type="file" class="upload-input" onchange="handleUpload('d-fir', 'Police F. I. R. document received.')">
+                    <div class="doc-info"><div class="doc-icon"><i class="fa-solid fa-building-shield"></i></div><div class="doc-details"><h5>Police FIR</h5><p>Verification for major accident</p></div></div>
+                    <div class="status-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                </div>
+                
+                <div class="doc-item" id="d-bill">
+                    <input type="file" class="upload-input" onchange="handleUpload('d-bill', 'Repair bill or invoice uploaded.')">
+                    <div class="doc-info"><div class="doc-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div><div class="doc-details"><h5>Bill / Invoice of Repair</h5><p>Garage estimate and bills</p></div></div>
+                    <div class="status-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                </div>
+            </div>
+            
+            <div id="vault-progress" style="margin-top: 20px; text-align: center;">
+                <button id="btn-proceed" class="primary" style="opacity: 0.5; pointer-events: none; width: auto; margin: 0 auto; display: inline-flex;" onclick="startStep7()">Hold for uploads <i style="margin-left:8px;" class="fa-solid fa-lock"></i></button>
             </div>
         </div>
 
         <!-- STEP 7: SUCCESS CONFIRMATION -->
         <div class="view-panel" id="v-4">
             <div style="text-align: center; padding: 40px 0;">
-                <div class="succ-icon">✓</div>
+                <div class="succ-icon"><i class="fa-solid fa-check"></i></div>
                 <h1 style="color:var(--success);">Submission Confirmed</h1>
-                <p>Your entirely voice-driven claim has been lodged and processed successfully.</p>
-                <div class="btn-group">
-                    <button class="primary" onclick="location.reload()">Finish</button>
+                <p>Your entirely voice-driven claim and document vault has been lodged and processed successfully.</p>
+                <div class="btn-group" style="justify-content:center;">
+                    <button class="primary" onclick="simulateVoiceChoice('Terminal disconnected. Have a safe day.', () => { location.reload() })" style="width: auto;">Finish & Terminate</button>
                 </div>
             </div>
         </div>
@@ -194,23 +228,27 @@
         // --- 3D BACKGROUND ---
         const canvas = document.getElementById('canvas-bg');
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x050505, 0.05);
+        scene.fog = new THREE.FogExp2(0x050507, 0.05);
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
         camera.position.z = 15;
         const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         canvas.appendChild(renderer.domElement);
-        const gridHelper = new THREE.GridHelper(50, 50, 0x5577cc, 0x223355);
+        
+        // Custom Grid
+        const gridHelper = new THREE.GridHelper(50, 50, 0x00f0ff, 0x112244);
         gridHelper.position.y = -5; gridHelper.rotation.x = Math.PI/180 * 10;
         scene.add(gridHelper);
-        const core = new THREE.Mesh(new THREE.IcosahedronGeometry(2, 1), new THREE.MeshBasicMaterial({ color: 0x5577cc, wireframe: true, transparent: true, opacity: 0.3 }));
+        
+        // Core
+        const core = new THREE.Mesh(new THREE.IcosahedronGeometry(2, 1), new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true, transparent: true, opacity: 0.15 }));
         scene.add(core);
 
         const pGeo = new THREE.BufferGeometry();
         let pArray = new Float32Array(1500);
         for(let i=0; i<1500; i++) pArray[i] = (Math.random() - 0.5)*40;
         pGeo.setAttribute('position', new THREE.BufferAttribute(pArray, 3));
-        const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.05, transparent: true, opacity: 0.5 }));
+        const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.05, transparent: true, opacity: 0.3 }));
         scene.add(particles);
 
         let mouseX = 0, mouseY = 0;
@@ -247,24 +285,35 @@
             utter.onend = callback || function(){};
             synth.speak(utter);
         }
+        
+        function simulateVoiceChoice(msg, callback) {
+            runVoiceBot(msg, callback);
+        }
 
         let currentView = 'v-0';
         function switchView(viewId) {
-            document.getElementById(currentView).classList.remove('active');
-            document.getElementById(viewId).classList.add('active');
+            const outView = document.getElementById(currentView);
+            const inView = document.getElementById(viewId);
+            
+            gsap.to(outView, { opacity: 0, scale: 0.95, duration: 0.4, onComplete: () => {
+                outView.classList.remove('active');
+                outView.style.transform = '';
+            }});
+            
+            inView.classList.add('active');
+            gsap.fromTo(inView, { opacity: 0, scale: 1.05 }, { opacity: 1, scale: 1, duration: 0.5, delay: 0.1 });
+            
             currentView = viewId;
         }
 
         // ================= FLOW STEPS ================= //
 
-        // STEP 1
         window.onload = () => {
             setTimeout(() => {
                 runVoiceBot("Please tell me your insurance type: Motor, Health, or Travel.");
-            }, 500);
+            }, 800);
         };
 
-        // STEP 2
         function startStep2() {
             switchView('v-1');
             runVoiceBot("Please describe what happened, including time, location, vehicle, and damage.");
@@ -301,7 +350,6 @@
                 txt.innerHTML = "Browser mic not supported. Simulating dictation...";
             }
 
-            // End transcibe after 6.5s and jump to Summary
             setTimeout(() => {
                 if(rec) try { rec.stop(); } catch(err){}
                 clearInterval(waveInterval);
@@ -313,51 +361,49 @@
             }, 6500);
         }
 
-        // STEP 3
         function showSummary() {
             switchView('v-2');
             runVoiceBot("I have extracted the following details. Time is 3:30 P M. Location Elante Mall. Vehicle is Hyundai Creta. Damage to bumper and headlight. Truck involved as third-party. Is this correct?");
         }
 
-        // STEP 4 & 5
+        // STEP 4 - UPLOADS
+        let uploadsDone = 0;
+        const totalUploads = 6;
         function startStep4() {
             switchView('v-3');
+            runVoiceBot("Please upload your Driving License, Registration Certificate, Insurance Certificate, Police F I R, Repair Invoice, and Damage photos. I will verify them dynamically.");
+        }
+
+        function handleUpload(elementId, voiceMessage) {
+            const el = document.getElementById(elementId);
+            if(el.classList.contains('done')) return;
             
-            const steps = [
-                { id: 'd-photos', t: "First, uploaded Vehicle Damage Photos acknowledged." },
-                { id: 'd-dl', t: "Second, Driving License logged." },
-                { id: 'd-rc', t: "Third, R. C. Registration checked." },
-                { id: 'd-fir', t: "Fourth, Optional F. I. R. police report received." },
-                { id: 'd-estimate', t: "Fifth, Garage Repair Estimate validated." }
-            ];
+            el.classList.add('done');
+            el.querySelector('.status-icon').innerHTML = '<i class="fa-solid fa-check-double"></i>';
+            el.querySelector('.upload-input').style.pointerEvents = 'none';
 
-            let idx = 0;
-            const processDocs = () => {
-                if(idx >= steps.length) {
-                    setTimeout(() => startStep7(), 1000);
-                    return;
+            uploadsDone++;
+            
+            runVoiceBot(voiceMessage, () => {
+                if(uploadsDone >= totalUploads) {
+                    const btn = document.getElementById('btn-proceed');
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                    btn.innerHTML = 'Proceed to Confirmation <i style="margin-left:8px;" class="fa-solid fa-arrow-right"></i>';
+                    
+                    runVoiceBot("All documents seamlessly verified. Vault locked. Transitioning to final confirmation.", () => {
+                        setTimeout(() => startStep7(), 500);
+                    });
                 }
-                const s = steps[idx];
-                
-                document.getElementById(s.id).style.borderColor = "var(--success)";
-                document.getElementById('vault-sub').innerText = "Processing list...";
-
-                // STEP 6: Verbal ACKs
-                runVoiceBot(s.t, () => {
-                    document.getElementById(s.id).classList.add('done');
-                    idx++; setTimeout(processDocs, 400);
-                });
-            }
-
-            runVoiceBot("Please upload the following documents. You can also speak while uploading.", () => {
-                setTimeout(processDocs, 600);
             });
         }
 
-        // STEP 7
         function startStep7() {
             switchView('v-4');
-            runVoiceBot("Submission confirmed. Your claim has been successfully registered.");
+            const particleEl = document.getElementById('canvas-bg');
+            gsap.to(particleEl, { opacity: 0.3, duration: 2 });
+            
+            runVoiceBot("Submission confirmed. Your claim has been successfully registered through our fully automated voice interface.");
         }
 
     </script>
